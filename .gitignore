@@ -1,0 +1,30 @@
+# ---------------------------------------------------------------- the workspace
+# Everything in this block is PER-MACHINE. Each computer keeps its own index
+# starting at 001, so none of it is shared and a pull can never conflict.
+# The corollary: git is NOT a backup of your extracted data -- mirror this
+# folder to Drive. See SETUP.md, "Working on more than one computer".
+
+# this machine's index; seed it with tools/init_workspace.py.
+# Leading slash matters: without it this would also swallow the template that
+# seeds it, docs/templates/paper_source.md, and a clone could not start.
+/paper_source.md
+
+# every paper folder -- build script, raw/ inputs and clean_<ID> outputs
+[0-9][0-9][0-9]_*/
+
+# every journal sweep folder, and the probe's control runs
+journals/J[0-9][0-9]_*/
+journals/_control/
+
+# the audit's report and its blind figure reads
+AUDIT.md
+AUDIT_partial.md
+audit/
+
+# ------------------------------------------------------------ caches and scratch
+__pycache__/
+*.pyc
+.venv/
+venv/
+~$*.xlsx
+.DS_Store

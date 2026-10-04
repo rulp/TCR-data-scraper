@@ -1,0 +1,11 @@
+# Everything the pipeline needs. Three packages, nothing else -- the rest is standard library.
+#
+#   pip install -r requirements.txt
+# or, without a venv:
+#   uv run --with pandas --with openpyxl --with pypdf python audit.py
+#
+# journals/probe.py needs none of these and runs under a bare python3.
+
+pandas>=1.3          # every build script, audit.py, lib/provenance.py
+openpyxl>=3.0        # the .xlsx engine behind read_excel / ExcelWriter
+pypdf>=3.0           # audit.py reads the text layer of supplementary PDFs
