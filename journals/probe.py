@@ -398,7 +398,8 @@ def arg(argv, flag, default=None):
 
 def main(argv):
     if "--help" in argv or "-h" in argv:
-        sys.exit(__doc__)
+        print(__doc__)      # an explicit help request is a success, not an error
+        return 0
     for a in argv:
         if a.startswith("--") and a not in ("--pmids", "--out", "--help"):
             sys.exit("probe.py: unknown option %s\n%s" % (a, __doc__))

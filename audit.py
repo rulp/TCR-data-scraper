@@ -57,7 +57,8 @@ def arg(flag, default=None):
 
 
 if "--help" in sys.argv or "-h" in sys.argv:
-    sys.exit(__doc__)
+    print(__doc__)          # an explicit help request is a success, not an error
+    sys.exit(0)
 for _a in sys.argv[1:]:
     if _a.startswith("--") and _a not in ("--papers", "--figures", "--no-network",
                                           "--root", "--help"):
