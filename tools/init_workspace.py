@@ -39,8 +39,8 @@ def main():
 Workspace ready. This machine's index starts at 001 and is not shared.
 
 Next:
-  1. Claim a journal in the shared tracking sheet (docs/templates/tracking_sheet.csv
-     says how it is laid out) so the other machine does not sweep it too.
+  1. Pick a journal in journals/journals.md, mark its Status/Machine row, and push
+     that change -- before sweeping, so the other machine sees the claim.
   2. python3 journals/probe.py J01        # harvest + probe, zero model tokens
   3. Point your agent at AGENTS.md.
 

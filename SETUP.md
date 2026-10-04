@@ -94,19 +94,24 @@ and `007` on the desktop are different papers, and that is fine, because nothing
 across machines. **PMID is the shared key**: it is in `paper_source.md`, it is required on every
 provenance row by `lib/provenance.py`, and it is what lets two machines' outputs merge later.
 
-Coordinate with one shared spreadsheet — `docs/templates/tracking_sheet.csv` has the two tabs:
+Two things coordinate the machines, and they split cleanly:
 
-- **Journals** — who is sweeping what, so you do not both sweep `J01`.
-- **Papers** — keyed on PMID, so you do not both extract the same paper. **Check this before
-  starting an extraction.**
+**Journals — in git.** `journals/journals.md` is the master list, identical everywhere, and it
+carries `Status`, `Machine` and `Last swept`. Pull, mark the row for the journal you are taking,
+push that change *before* you sweep. The other machine then sees the claim. It is the only
+tracked file you edit, and its own Rules section has the three rules that keep it mergeable.
+
+**Papers — in a shared sheet.** `docs/templates/tracking_sheet.csv` is one tab keyed on PMID.
+Your paper index is private to this machine, so this is the only way to know a paper is already
+taken. Check it before extracting.
 
 ```bash
-python3 tools/export_index.py          # your index as CSV rows, ready to paste into the sheet
+python3 tools/export_index.py          # this machine's papers as CSV, ready to paste
 ```
 
 Day to day: `git pull` whenever you want the other machine's toolkit fixes — procedures,
-playbook, scripts. It cannot touch your papers or your index. Push toolkit changes the same way.
-Your data travels by Drive, not by git.
+playbook, scripts, and the journal list. It cannot touch your papers or your index. Push toolkit
+and journal-status changes the same way. Your data travels by Drive, not by git.
 
 ## 6. Pointing an AI agent at it
 

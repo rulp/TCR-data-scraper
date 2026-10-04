@@ -145,6 +145,16 @@ unblocks**, so they can judge whether it is worth the trip. This is how
 
 Which wave ran, when, and the verdict counts.
 
+### 5. Update this journal's row in `journals/journals.md`
+
+**This is the one tracked file a screen edits, and it is how the other machine knows.** Set
+`Status`, `Machine` and `Last swept` on that journal's row — `in progress` when the sweep starts,
+`swept` when the journal is finished, `skipped` with a reason in `Notes`.
+
+Claim it **before** you sweep, not after, and push that change: its whole purpose is to stop a
+second computer starting the same journal. Touch only that row's cells, and never re-align the
+table — `journals/journals.md` has the rules and why they matter.
+
 ## Do not
 
 - **Do not download supplementary files.** The inventory on the card is enough to judge. Fetching
@@ -153,5 +163,7 @@ Which wave ran, when, and the verdict counts.
 - **Do not assign an `ID` or touch `paper_source.md`.** IDs are assigned when a paper enters an
   extraction batch. `screened.md` is the waiting list.
 - **Do not extract.** If a locator is easy to write, write it and stop.
+- **Do not edit another journal's row**, and do not reformat `journals/journals.md`. One row, its
+  own cells, nothing else.
 - **Do not promote a paper you could not open.** `no PMC access` is PARK, never FAIL — collapsing
   "no evidence" into "no access" silently discards the closed-access half of the corpus.

@@ -1,14 +1,13 @@
-# Two tabs for the shared Google Sheet. Paste each block into its own tab.
-# This is the ONLY thing the machines share. Both tabs are keyed so that two
-# computers cannot silently do the same work twice.
+# The shared Papers sheet -- one tab, keyed on PMID.
+#
+# Journal sweep progress is NOT here: it lives in journals/journals.md, which is in
+# git and identical on every machine. This sheet covers the one thing git cannot,
+# because each machine's index is private: which PAPERS have already been taken.
+#
+# Check it before starting an extraction. "Local ID" is only meaningful on the
+# machine named beside it -- 007 on the laptop and 007 on the desktop are different
+# papers. PMID is the only column both machines agree on.
+#
+# python3 tools/export_index.py   ->  rows for this machine, ready to paste.
 
-== TAB 1: Journals ==
-J##,Journal,NLM [ta],Machine,Status,Date swept,Harvested,Passed,Notes
-J01,Nature Communications,Nat Commun,,not started,,,,
-J02,Journal for ImmunoTherapy of Cancer,J Immunother Cancer,,not started,,,,
-
-== TAB 2: Papers ==
-# Keyed on PMID. Check this tab BEFORE extracting -- it is what stops both
-# machines paying for the same paper. "Local ID" is only meaningful on the
-# machine named beside it.
 PMID,Author,Year,Journal,Machine,Local ID,Rows,Status,Date

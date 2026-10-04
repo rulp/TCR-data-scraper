@@ -16,7 +16,7 @@ for people; `SETUP.md` is how to run it on a fresh machine.
 | "find papers that…", a literature sweep, corpus building | `procedures/screen-corpus.md` | the funnel, gate rules and search terms |
 | a `J##`, or "screen journal X" | `procedures/screen-journal.md` | the three gates, the pass rule, the locator template |
 | verifying that recorded sources are real | `procedures/audit-provenance.md` | `audit.py`, the blind figure protocol, how to investigate |
-| "which journal is next", a window question | `journals/journals.md` | the numbered journal list and its sweep state |
+| "which journal is next", a window question | `journals/journals.md` | the 40-journal master list, shared across machines, with its sweep state |
 | **what the output must look like** | `docs/schema.md` | the ten columns, the conventions, the provenance vocabulary |
 | a judgement call mid-extraction | `playbook/judgement.md` | mandatory for every extraction |
 | validating output before writing it | `playbook/checks.md` | the checks, as paste-in assertions |
@@ -134,6 +134,10 @@ here because they must stay loaded whatever the task:
 - **Run Python through `uv run --with pandas --with openpyxl --with pypdf python <script>`**, or
   activate a venv built from `requirements.txt`. `journals/probe.py` is standard-library only and
   runs under a bare `python3`. `SETUP.md` has both paths.
+- **`journals/journals.md` is the one tracked file you edit.** It is the master journal list,
+  identical on every machine, and it carries each journal's sweep `Status`, `Machine` and
+  `Last swept`. Claim a journal by marking its row and pushing *before* sweeping. Edit only that
+  row's cells and never re-align the table; its Rules section says why.
 - **The workspace is not in git** — `paper_source.md`, the paper folders, the journal sweep
   folders and `AUDIT.md`. Git carries the toolkit only, so a pull never conflicts with work in
   progress, and it is also not a backup: that is the Drive mirror's job. Each build script's

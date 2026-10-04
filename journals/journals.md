@@ -42,10 +42,23 @@ journals/
   decision: change the cell, say why in that journal's `sweep.md`, and re-sweep only the added
   years. `journals/method.md` has the recall evidence for why this column exists — a 2-year
   window would have missed the two most data-rich papers in the corpus.
-- **Sweep status is NOT tracked here.** This file is shared reference, identical on every
-  machine; which journals *you* have swept is per-machine progress and lives in the shared
-  tracking sheet (`docs/templates/tracking_sheet.csv`). That is what lets two computers work
-  from the same list without ever editing it.
+- **`Status`**: `not started` · `in progress` · `swept` · `skipped` (say why in the Notes
+  column). `Machine` names the computer that did it, `Last swept` the date.
+- **This file is shared across machines, and it is the only tracked file you edit.** Three rules:
+  1. **`git pull` before you claim a journal, and push the status change immediately** — before
+     the sweep, not after. That is what stops the other machine picking the same one, and it is
+     also what keeps merges trivial: if you pull first, your edit is the only one in flight.
+  2. **Touch only the cells of the row you are sweeping.** Never the `Notes`, counts or priority
+     of a row someone else is working on.
+  3. **Never re-align or reformat the table.** The columns are deliberately left ragged. Padding
+     them rewrites all 40 rows and guarantees a conflict — measured, not assumed.
+
+  **If you do get a conflict here, it is one or two lines and the fix is to keep both edited
+  rows.** Git needs three unchanged lines between edits to merge them silently, so two machines
+  sweeping *adjacent* journals — `J01` and `J02`, which is exactly what working down the P1 list
+  looks like — will conflict even though the edits do not overlap. That is a loud, ten-second
+  fix, and it is the trade this layout accepts in exchange for progress living in the list you
+  already read.
 - **Counts are a dated snapshot**, not live. They exist so a session knows the expected volume
   before starting, and so growth since the last sweep is visible. `journals/method.md` has the
   `curl` command that refreshes them.
@@ -65,48 +78,48 @@ journals/
 
 Snapshot: counts taken **2026-10-03**, window `2024/01/01:2026/12/31`. Total `Broad` = 827.
 
-| J## | Journal | NLM `[ta]` | Window | Broad | Plat | Priority | Notes |
-|-----|---------|-----------|--------|-------|------|----------|-------|
-| J01 | Nature Communications | `Nat Commun` | 2024–2026 | 84 | 6 | P1 | highest broad count in P1 |
-| J02 | Journal for ImmunoTherapy of Cancer | `J Immunother Cancer` | 2024–2026 | 76 | 2 | P1 | strong data mandate |
-| J03 | PNAS | `Proc Natl Acad Sci U S A` | 2024–2026 | 45 | 4 | P1 |  |
-| J04 | Science Advances | `Sci Adv` | 2024–2026 | 34 | 3 | P1 |  |
-| J05 | Molecular Therapy | `Mol Ther` | 2024–2026 | 32 | 4 | P1 | known-good venue |
-| J06 | Immunity | `Immunity` | 2024–2026 | 30 | 0 | P1 | Plat 0 is a query artefact |
-| J07 | Science Immunology | `Sci Immunol` | 2024–2026 | 17 | 2 | P1 |  |
-| J08 | Nature | `Nature` | 2024–2026 | 16 | 0 | P1 |  |
-| J09 | Nature Immunology | `Nat Immunol` | 2024–2026 | 15 | 0 | P1 |  |
-| J10 | Cell | `Cell` | 2024–2026 | 8 | 0 | P1 | known-good venue; its best papers predate a 2-year window |
-| J11 | Science | `Science` | 2024–2026 | 7 | 0 | P1 |  |
-| J12 | Nature Biotechnology | `Nat Biotechnol` | 2024–2026 | 7 | 2 | P1 | known-good venue |
-| J13 | Cancer Immunology Research | `Cancer Immunol Res` | 2024–2026 | 28 | 1 | P2 |  |
-| J14 | Journal of Clinical Investigation | `J Clin Invest` | 2024–2026 | 25 | 1 | P2 |  |
-| J15 | Cell Reports | `Cell Rep` | 2024–2026 | 20 | 1 | P2 |  |
-| J16 | Cell Reports Medicine | `Cell Rep Med` | 2024–2026 | 18 | 1 | P2 |  |
-| J17 | Blood | `Blood` | 2024–2026 | 18 | 2 | P2 |  |
-| J18 | eLife | `Elife` | 2024–2026 | 13 | 0 | P2 |  |
-| J19 | Clinical Cancer Research | `Clin Cancer Res` | 2024–2026 | 13 | 1 | P2 |  |
-| J20 | Journal of Experimental Medicine | `J Exp Med` | 2024–2026 | 12 | 0 | P2 |  |
-| J21 | Science Translational Medicine | `Sci Transl Med` | 2024–2026 | 11 | 0 | P2 |  |
-| J22 | Cancer Cell | `Cancer Cell` | 2024–2026 | 9 | 0 | P2 |  |
-| J23 | Nature Medicine | `Nat Med` | 2024–2026 | 8 | 0 | P2 |  |
-| J24 | Cell Reports Methods | `Cell Rep Methods` | 2024–2026 | 6 | 1 | P2 | methods-heavy, good density |
-| J25 | Nature Cancer | `Nat Cancer` | 2024–2026 | 5 | 0 | P2 |  |
-| J26 | Nature Methods | `Nat Methods` | 2024–2026 | 4 | 1 | P2 |  |
-| J27 | Cell Systems | `Cell Syst` | 2024–2026 | 4 | 1 | P2 |  |
-| J28 | Frontiers in Immunology | `Front Immunol` | 2024–2026 | 142 | 13 | P3 | highest volume on BOTH axes; P3 on venue quality, not on yield |
-| J29 | Journal of Immunology | `J Immunol` | 2024–2026 | 29 | 1 | P3 |  |
-| J30 | Briefings in Bioinformatics | `Brief Bioinform` | 2024–2026 | 29 | 5 | P3 | computational; datasets often on GitHub, not in the paper |
-| J31 | European Journal of Immunology | `Eur J Immunol` | 2024–2026 | 23 | 2 | P3 |  |
-| J32 | Bioinformatics | `Bioinformatics` | 2024–2026 | 13 | 0 | P3 |  |
-| J33 | PLOS Computational Biology | `PLoS Comput Biol` | 2024–2026 | 6 | 1 | P3 |  |
-| J34 | Structure | `Structure` | 2024–2026 | 5 | 1 | P3 | structural; pairs usually resolvable via PDB |
-| J35 | Immunology & Cell Biology | `Immunol Cell Biol` | 2024–2026 | 5 | 1 | P3 |  |
-| J36 | Nucleic Acids Research | `Nucleic Acids Res` | 2024–2026 | 4 | 0 | P3 | database issues — may announce a TCR resource |
-| J37 | Protein Science | `Protein Sci` | 2024–2026 | 2 | 0 | P3 |  |
-| J38 | Nature Machine Intelligence | `Nat Mach Intell` | 2024–2026 | 2 | 1 | P3 |  |
-| J39 | Genome Biology | `Genome Biol` | 2024–2026 | 2 | 0 | P3 |  |
-| J40 | Nature Structural & Molecular Biology | `Nat Struct Mol Biol` | 2024–2026 | 0 | 0 | P3 | 0 for this window; keep listed, re-check on widening |
+| J## | Journal | NLM `[ta]` | Window | Broad | Plat | Priority | Status | Machine | Last swept | Notes |
+|-----|---------|-----------|--------|-------|------|----------|--------|---------|------------|-------|
+| J01 | Nature Communications | `Nat Commun` | 2024–2026 | 84 | 6 | P1 | not started | — | — | highest broad count in P1 |
+| J02 | Journal for ImmunoTherapy of Cancer | `J Immunother Cancer` | 2024–2026 | 76 | 2 | P1 | not started | — | — | strong data mandate |
+| J03 | PNAS | `Proc Natl Acad Sci U S A` | 2024–2026 | 45 | 4 | P1 | not started | — | — |  |
+| J04 | Science Advances | `Sci Adv` | 2024–2026 | 34 | 3 | P1 | not started | — | — |  |
+| J05 | Molecular Therapy | `Mol Ther` | 2024–2026 | 32 | 4 | P1 | not started | — | — | known-good venue |
+| J06 | Immunity | `Immunity` | 2024–2026 | 30 | 0 | P1 | not started | — | — | Plat 0 is a query artefact |
+| J07 | Science Immunology | `Sci Immunol` | 2024–2026 | 17 | 2 | P1 | not started | — | — |  |
+| J08 | Nature | `Nature` | 2024–2026 | 16 | 0 | P1 | not started | — | — |  |
+| J09 | Nature Immunology | `Nat Immunol` | 2024–2026 | 15 | 0 | P1 | not started | — | — |  |
+| J10 | Cell | `Cell` | 2024–2026 | 8 | 0 | P1 | not started | — | — | known-good venue; its best papers predate a 2-year window |
+| J11 | Science | `Science` | 2024–2026 | 7 | 0 | P1 | not started | — | — |  |
+| J12 | Nature Biotechnology | `Nat Biotechnol` | 2024–2026 | 7 | 2 | P1 | not started | — | — | known-good venue |
+| J13 | Cancer Immunology Research | `Cancer Immunol Res` | 2024–2026 | 28 | 1 | P2 | not started | — | — |  |
+| J14 | Journal of Clinical Investigation | `J Clin Invest` | 2024–2026 | 25 | 1 | P2 | not started | — | — |  |
+| J15 | Cell Reports | `Cell Rep` | 2024–2026 | 20 | 1 | P2 | not started | — | — |  |
+| J16 | Cell Reports Medicine | `Cell Rep Med` | 2024–2026 | 18 | 1 | P2 | not started | — | — |  |
+| J17 | Blood | `Blood` | 2024–2026 | 18 | 2 | P2 | not started | — | — |  |
+| J18 | eLife | `Elife` | 2024–2026 | 13 | 0 | P2 | not started | — | — |  |
+| J19 | Clinical Cancer Research | `Clin Cancer Res` | 2024–2026 | 13 | 1 | P2 | not started | — | — |  |
+| J20 | Journal of Experimental Medicine | `J Exp Med` | 2024–2026 | 12 | 0 | P2 | not started | — | — |  |
+| J21 | Science Translational Medicine | `Sci Transl Med` | 2024–2026 | 11 | 0 | P2 | not started | — | — |  |
+| J22 | Cancer Cell | `Cancer Cell` | 2024–2026 | 9 | 0 | P2 | not started | — | — |  |
+| J23 | Nature Medicine | `Nat Med` | 2024–2026 | 8 | 0 | P2 | not started | — | — |  |
+| J24 | Cell Reports Methods | `Cell Rep Methods` | 2024–2026 | 6 | 1 | P2 | not started | — | — | methods-heavy, good density |
+| J25 | Nature Cancer | `Nat Cancer` | 2024–2026 | 5 | 0 | P2 | not started | — | — |  |
+| J26 | Nature Methods | `Nat Methods` | 2024–2026 | 4 | 1 | P2 | not started | — | — |  |
+| J27 | Cell Systems | `Cell Syst` | 2024–2026 | 4 | 1 | P2 | not started | — | — |  |
+| J28 | Frontiers in Immunology | `Front Immunol` | 2024–2026 | 142 | 13 | P3 | not started | — | — | highest volume on BOTH axes; P3 on venue quality, not on yield |
+| J29 | Journal of Immunology | `J Immunol` | 2024–2026 | 29 | 1 | P3 | not started | — | — |  |
+| J30 | Briefings in Bioinformatics | `Brief Bioinform` | 2024–2026 | 29 | 5 | P3 | not started | — | — | computational; datasets often on GitHub, not in the paper |
+| J31 | European Journal of Immunology | `Eur J Immunol` | 2024–2026 | 23 | 2 | P3 | not started | — | — |  |
+| J32 | Bioinformatics | `Bioinformatics` | 2024–2026 | 13 | 0 | P3 | not started | — | — |  |
+| J33 | PLOS Computational Biology | `PLoS Comput Biol` | 2024–2026 | 6 | 1 | P3 | not started | — | — |  |
+| J34 | Structure | `Structure` | 2024–2026 | 5 | 1 | P3 | not started | — | — | structural; pairs usually resolvable via PDB |
+| J35 | Immunology & Cell Biology | `Immunol Cell Biol` | 2024–2026 | 5 | 1 | P3 | not started | — | — |  |
+| J36 | Nucleic Acids Research | `Nucleic Acids Res` | 2024–2026 | 4 | 0 | P3 | not started | — | — | database issues — may announce a TCR resource |
+| J37 | Protein Science | `Protein Sci` | 2024–2026 | 2 | 0 | P3 | not started | — | — |  |
+| J38 | Nature Machine Intelligence | `Nat Mach Intell` | 2024–2026 | 2 | 1 | P3 | not started | — | — |  |
+| J39 | Genome Biology | `Genome Biol` | 2024–2026 | 2 | 0 | P3 | not started | — | — |  |
+| J40 | Nature Structural & Molecular Biology | `Nat Struct Mol Biol` | 2024–2026 | 0 | 0 | P3 | not started | — | — | 0 for this window; keep listed, re-check on widening |
 
 ## Adding a journal
 
