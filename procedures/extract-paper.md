@@ -1,3 +1,8 @@
+---
+name: extract-paper
+description: Extract the TCR–pMHC dataset from one published paper into the clean_<ID> schema files. Use whenever a PMID, PMCID, DOI or paper is handed over to be extracted, or when a queued paper comes off paper_source.md. Holds the six-step procedure and the validation rules; the output contract itself is docs/schema.md.
+---
+
 # Extracting one paper
 
 You are turning one published paper into `clean_<ID>.xlsx` plus its provenance and companion

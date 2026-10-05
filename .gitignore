@@ -21,6 +21,16 @@ AUDIT.md
 AUDIT_partial.md
 audit/
 
+# ------------------------------------------------- generated skill adapters
+# SKILL.md is the Agent Skills open standard, but every tool hard-codes the folder
+# it looks in and none can be redirected. So the adapters are GENERATED, never
+# committed -- procedures/*.md is the one source of truth, and the repo stays free
+# of any vendor's directory. Create them with tools/init_workspace.py.
+.agents/
+.claude/
+.cursor/
+.codex/
+
 # ------------------------------------------------------------ caches and scratch
 __pycache__/
 *.pyc

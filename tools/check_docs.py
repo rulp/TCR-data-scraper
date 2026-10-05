@@ -14,7 +14,11 @@ import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
-SKIP_DIRS = {".git", "raw", "__pycache__", ".venv", "venv", "node_modules"}
+# The vendor skill folders are GENERATED from procedures/ by tools/init_workspace.py
+# and are gitignored, so they are output, not source -- checking them would be checking
+# our own generator's work twice.
+SKIP_DIRS = {".git", "raw", "__pycache__", ".venv", "venv", "node_modules",
+             ".agents", ".claude", ".cursor", ".codex"}
 
 # A repo path inside backticks: `playbook/checks.md`, `audit.py`, `lib/provenance.py`.
 # Anchored on a known extension so prose like `clean` or `--papers` is not mistaken for one.
@@ -35,7 +39,7 @@ ID_OK = {"README.md", "AGENTS.md"}
 # Files the PIPELINE CREATES at runtime, in the gitignored workspace. The docs must be
 # able to name them even though a clean clone has none of them yet.
 RUNTIME = re.compile(r"^(paper_source\.md|AUDIT(_partial)?\.md|candidates\.tsv|sweep\.md"
-                     r"|screened\.md|NEEDS_HUMAN\.md|clean_\w+\.(xlsx|csv))$")
+                     r"|screened\.md|NEEDS_HUMAN\.md|clean_\w+\.(xlsx|csv)|SKILL\.md)$")
 
 
 def walk():
@@ -44,6 +48,34 @@ def walk():
         for n in names:
             if n.endswith((".md", ".py")):
                 yield os.path.join(base, n)
+
+
+def check_procedures():
+    """Every procedure must carry the frontmatter its skill adapter is generated from.
+
+    A missing or mismatched `name` is the failure that matters: Cursor requires a
+    skill's name to equal its folder, and a wrong one fails silently -- the skill
+    simply never matches.
+    """
+    bad = []
+    d = os.path.join(ROOT, "procedures")
+    if not os.path.isdir(d):
+        return bad
+    for f in sorted(os.listdir(d)):
+        if not f.endswith(".md"):
+            continue
+        name = f[:-3]
+        m = re.match(r"\A---\n(.*?)\n---\n", open(os.path.join(d, f), encoding="utf-8").read(), re.S)
+        if not m:
+            bad.append(("procedures/" + f, "no YAML frontmatter"))
+            continue
+        fields = dict(re.findall(r"^(\w[\w-]*):\s*(.*)$", m.group(1), re.M))
+        if fields.get("name") != name:
+            bad.append(("procedures/" + f,
+                        "declares name %r, must be %r" % (fields.get("name"), name)))
+        if not fields.get("description", "").strip():
+            bad.append(("procedures/" + f, "no description"))
+    return bad
 
 
 def main():
@@ -83,15 +115,22 @@ def main():
             for m in LOCAL_ID.findall(text):
                 local_ids.append((rel, m))
 
-        # CLAUDE.md is gone; .claude/skills/ may be named only by the stubs themselves,
-        # by AGENTS.md's layout tree, and by SETUP.md's note about what it is for.
+        # CLAUDE.md is gone. .claude/skills/ is generated and gitignored, so only the
+        # three docs that explain the arrangement have reason to name it.
         if re.search(r"\bCLAUDE\.md\b", text):
             claude_refs.append((rel, "CLAUDE.md"))
         if stubs in text.replace("/", os.sep) and rel not in (
-                "AGENTS.md", "SETUP.md", "README.md") and not rel.startswith(".claude"):
+                "AGENTS.md", "SETUP.md", "README.md", os.path.join("tools", "init_workspace.py")):
             claude_refs.append((rel, ".claude/skills"))
 
+    procs = check_procedures()
+
     bad = False
+    if procs:
+        bad = True
+        print("Procedures whose frontmatter cannot generate a skill adapter:")
+        for rel, why in procs:
+            print("  %-40s -> %s" % (rel, why))
     if dangling:
         bad = True
         print("Cited paths that do not exist:")
@@ -110,7 +149,7 @@ def main():
 
     if bad:
         return 1
-    print("check_docs: every cited path resolves; no stale harness or paper-ID references.")
+    print("check_docs: paths resolve, procedure frontmatter is valid, no stale references.")
     return 0
 
 

@@ -1,4 +1,4 @@
-# web_scraper — turning published papers into TCR training data
+# web_scraper: extracting TCR training data from papers
 
 ## What this is for
 

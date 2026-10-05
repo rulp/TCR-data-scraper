@@ -1,3 +1,8 @@
+---
+name: screen-corpus
+description: Build the extraction queue — screen journals and reference databases en masse to find papers that could yield a clean_<ID> dataset, then append the survivors to paper_source.md. Use for literature sweeps, corpus building, or "find me papers that…". Do NOT use when a specific PMID is handed over for extraction; that is extract-paper.
+---
+
 # Screening the literature for extractable papers
 
 **Scope.** This is for building the queue. Given a specific PMID, stop — use `extract-paper`

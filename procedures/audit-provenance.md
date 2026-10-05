@@ -1,3 +1,8 @@
+---
+name: audit-provenance
+description: Verify that every row in every clean_<ID>.xlsx really comes from the source it records. Runs audit.py, dispatches blind figure transcriptions, investigates contradictions, writes AUDIT.md. Use for "audit the data", "check the sources are real", or after a batch of extractions. Not for building or extracting.
+---
+
 # Auditing recorded sources
 
 `checks.md` **C12** asserts an attribution is *present*. This asserts it is *true*. The audit

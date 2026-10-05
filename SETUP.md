@@ -1,4 +1,4 @@
-# Setup — running this on another machine
+# Setup
 
 Nothing here is specific to macOS, to Claude, or to any one AI tool. You need Python and an
 internet connection.
@@ -119,6 +119,25 @@ Start it on **`AGENTS.md`**. That file routes every task to an ordinary markdown
 ordinary path — the four procedures are in `procedures/`, the reference material in `playbook/`
 and `docs/`. No skill system, plugin or memory feature is required.
 
-`.claude/skills/` holds four four-line stubs so that Claude Code can auto-invoke the procedures by
-name. They contain no content of their own. Delete the whole `.claude/` directory if you use a
-different tool and nothing breaks.
+### Skill adapters, if your tool supports them
+
+`SKILL.md` is the [Agent Skills](https://agentskills.io) open standard, supported by 30-odd tools.
+Each one hard-codes the folder it looks in, and none can be redirected — so **no vendor folder is
+committed here.** `tools/init_workspace.py` generates them instead, from `procedures/`:
+
+| folder | read by |
+|---|---|
+| `.agents/skills/` | Codex CLI, Cursor, and the wider Agent Skills ecosystem |
+| `.claude/skills/` | Claude Code, which reads nothing else |
+
+```bash
+python3 tools/init_workspace.py                 # both
+python3 tools/init_workspace.py --tools claude  # or just yours
+```
+
+They are gitignored, and each is a four-line pointer at the real procedure rather than a copy, so
+they cannot go stale. **Re-run after a `git pull`** if a procedure's description changed.
+
+This is a convenience, not a requirement: it lets you say "extract this paper" instead of naming
+the file. With no adapters at all, `AGENTS.md` still routes every task to `procedures/` by path,
+which is how a tool with no skills mechanism uses this repo.
