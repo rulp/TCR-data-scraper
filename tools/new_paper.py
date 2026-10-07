@@ -4,8 +4,10 @@
 `journals/journals.md` states the rule -- "a paper gets its permanent ID, its
 paper_source.md row and its root-level folder when it enters an extraction batch" -- but
 nothing performed it, so the never-renumber/never-reuse invariant was maintained by hand.
-This does it in one step, and moves across any files already fetched into the journal's
-`incoming/<PMID>/` staging directory.
+This does it in one step, moves across any files already fetched into the journal's
+`incoming/<PMID>/` staging directory, and closes out that paper's entries in the journal's
+`NEEDS_HUMAN.md` so the shopping list drains as papers are extracted instead of growing
+forever.
 
     python3 tools/new_paper.py --pmid 38684663 --from J01
     python3 tools/new_paper.py --pmid 41058174 --author Jones --year 2026 --journal "Mol Ther"
@@ -34,6 +36,10 @@ INDEX = os.path.join(ROOT, "paper_source.md")
 
 sys.path.insert(0, HERE)
 import export_index                                  # noqa: E402  -- its rows() parses the index
+
+#: Extensions a supplementary file plausibly has. Used to spot the filenames inside a
+#: NEEDS_HUMAN.md block so a fulfilled request can be recognised and closed.
+SUPP = r"[\w.-]+\.(?:pdf|xlsx|xls|csv|tsv|txt|zip|docx|doc)"
 
 FLAGS = ("--pmid", "--from", "--author", "--year", "--journal", "--title", "--source",
          "--dry-run", "--help", "-h")
@@ -86,6 +92,58 @@ def from_candidates(jid, pmid):
                         row[3] if len(row) > 3 else "",
                         row[13] if len(row) > 13 else "")
     return "", "", ""
+
+
+def close_requests(jdir, pmid, raw, rel_raw):
+    """Settle this paper's blocks in the journal's NEEDS_HUMAN.md.
+
+    A request dies when its file lands in the paper's raw/, not when the paper is taken into
+    a batch -- so each block is judged on whether any file it names is actually there now.
+    Fulfilled blocks collapse to one line under `## Fulfilled`; the rest survive, with their
+    destination rewritten from the staging directory to the paper's own raw/, which exists
+    from this moment and is where the file should now go.
+
+    Returns (n_closed_now, n_retargeted). The count is of requests closed by THIS call --
+    lines already under `## Fulfilled` are carried across, not counted again.
+    """
+    path = os.path.join(jdir, "NEEDS_HUMAN.md")
+    if not os.path.exists(path):
+        return 0, 0
+    text = open(path, encoding="utf-8").read()
+    have = {f.lower() for f in os.listdir(raw)} if os.path.isdir(raw) else set()
+
+    # Split on level-2 headings, keeping each heading with its body.
+    parts = re.split(r"(?m)^(?=## )", text)
+    keep, done, closed_now = [], [], 0
+    for part in parts:
+        head = part.split("\n", 1)[0]
+        if not re.match(r"##\s*%s\b" % pmid, head):
+            if not head.startswith("## Fulfilled"):
+                keep.append(part)
+            else:                       # absorb an existing Fulfilled list, re-emitted below
+                done.extend(l for l in part.split("\n")[1:] if l.startswith("- "))
+            continue
+        named = [m.group(0) for m in re.finditer(SUPP, part)]
+        got = [n for n in named if n.lower() in have]
+        if got:
+            closed_now += 1
+            done.append("- %s  %s -- %s" % (datetime.date.today().isoformat(),
+                                            head.lstrip("# ").strip(), ", ".join(sorted(set(got)))))
+        else:
+            # Still outstanding, but the destination has changed now that an ID exists.
+            part = re.sub(r"(?m)^- put it in: .*$",
+                          "- put it in: `%s/`" % rel_raw, part)
+            keep.append(part)
+
+    out = "".join(keep).rstrip("\n") + "\n"
+    if done:
+        out += ("\n## Fulfilled\n\n"
+                "Closed automatically by `tools/new_paper.py` when the file reached the paper's\n"
+                "`raw/`. Kept as one line each so the list above stays the outstanding work.\n\n"
+                + "\n".join(done) + "\n")
+    open(path, "w", encoding="utf-8").write(out)
+    return closed_now, sum(1 for k in keep
+                           if re.match(r"##\s*%s\b" % pmid, k.split("\n", 1)[0]))
 
 
 def label(author):
@@ -191,6 +249,14 @@ def main(argv):
     print("\nwrote the row and created the folder.")
     if staged:
         print("moved %d staged file(s) into raw/." % len(staged))
+    if jid:
+        d = sweep_dir(jid)
+        if d:
+            closed, left = close_requests(d, pmid, raw, os.path.relpath(raw, ROOT))
+            if closed:
+                print("closed %d NEEDS_HUMAN request(s) for this paper." % closed)
+            if left:
+                print("%d request(s) still outstanding -- destination now points at raw/." % left)
     print("next: write %s/%s_%s.py" % (os.path.relpath(folder, ROOT), nid, name))
     if jid:
         d = sweep_dir(jid)

@@ -181,6 +181,20 @@ names a path that does not exist and inventing a number would break the assign-o
 extraction, so a file fetched today lands in the right place whenever that happens. Without a
 real destination this list cannot be worked in one sitting, which is its only purpose.
 
+**Create the directory as you write the entry**, so the user never has to prepare anything
+before fetching:
+
+```bash
+mkdir -p journals/<J##>_*/incoming/<PMID>
+```
+
+**The list drains itself.** `tools/new_paper.py` settles this paper's entries when it takes the
+paper into a batch: a request whose file has arrived in `raw/` collapses to one line under
+`## Fulfilled`, and one still outstanding keeps its block but has its destination rewritten to
+the paper's own `raw/`, which exists from that moment. So the file stays a list of work still to
+do, rather than growing by a wave every time the journal is screened. Append new entries; never
+hand-edit the `## Fulfilled` section.
+
 The user has institutional access and can fetch these in one sitting. **State what the file
 unblocks**, so they can judge whether it is worth the trip. This is how
 `NIHMS1947859-supplement-6.pdf` was resolved for Dezfulian 2023.
