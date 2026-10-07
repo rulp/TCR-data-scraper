@@ -89,6 +89,9 @@ if _missing:
 # is the one thing SETUP.md says cannot be regenerated honestly.
 ROOT = arg("--root", HERE)
 AUDIT = os.path.join(ROOT, "audit")
+#: Every paper folder lives under here, not at the repo root -- one folder per paper would
+#: otherwise bury the toolkit's own files once a corpus passes a few dozen papers.
+PAPERS = os.path.join(ROOT, "papers")
 SCHEMA = ["Va", "Ja", "CDR3a", "Vb", "Jb", "CDR3b",
           "Antigen", "MHC", "pMHC_species", "TCR_species"]
 # These two record a decision about provenance, not a string lifted from the paper.
@@ -311,7 +314,7 @@ def classify(field, value, source, idx, figure_reads, paper):
 
     # 2b. cited another paper of ours -- look where that paper keeps its evidence
     for other in REUSE.findall(source):
-        odir = next((d for d in glob.glob(os.path.join(ROOT, other + "_*"))
+        odir = next((d for d in glob.glob(os.path.join(PAPERS, other + "_*"))
                      if os.path.isdir(d)), None)
         if odir:
             oidx = raw_index_cached(odir)
@@ -487,8 +490,8 @@ def main():
     # Both halves must accept any three digits. Anchored on a literal `0`, this used to
     # find only 000_*-099_*, so a corpus past 100 papers audited 99 of them and still
     # printed `0 contradicted` and exited 0 -- the loudest possible all-clear from a
-    # check that had stopped looking. Matches .gitignore's `[0-9][0-9][0-9]_*`.
-    books = sorted(glob.glob(os.path.join(ROOT, "[0-9][0-9][0-9]_*",
+    # check that had stopped looking. Matches .gitignore's `/papers/`.
+    books = sorted(glob.glob(os.path.join(PAPERS, "[0-9][0-9][0-9]_*",
                                           "clean_[0-9][0-9][0-9].xlsx")))
     have = {re.search(r"clean_(\d+)\.xlsx", b).group(1) for b in books}
     if only:

@@ -6,7 +6,7 @@ The rest is per-machine and gitignored, so a clone has to create it:
 
   * paper_source.md, this machine's index, seeded from docs/templates/
   * the skill adapters, which let your agent auto-invoke a procedure by name
-  * empty journals/ and audit/ directories for the workspace to fill
+  * empty journals/, papers/ and audit/ directories for the workspace to fill
 
     python3 tools/init_workspace.py                   # both adapter folders
     python3 tools/init_workspace.py --tools claude    # just one
@@ -123,7 +123,7 @@ def main(argv):
         shutil.copyfile(os.path.join(ROOT, src), d)
         made.append(dst)
 
-    for d in ("journals", "audit"):
+    for d in ("journals", "audit", "papers"):
         os.makedirs(os.path.join(ROOT, d), exist_ok=True)
 
     written = 0

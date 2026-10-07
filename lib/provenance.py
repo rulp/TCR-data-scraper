@@ -9,7 +9,9 @@ script still decides what the values are.
 Usage, once per emitted row:
 
     import sys, os
-    sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+    # papers/<ID>_<FirstAuthor>/ -> papers/ -> repo root, where lib/ lives.
+    HERE = os.path.dirname(os.path.abspath(__file__))
+    sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
     from lib.provenance import Prov, check_provenance
 
     p = Prov()

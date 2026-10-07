@@ -24,7 +24,7 @@ SKIP_DIRS = {".git", "raw", "__pycache__", ".venv", "venv", "node_modules",
 # `41467_2024_47576_MOESM7_ESM.xlsx` precisely because that file is NOT here yet -- naming it
 # is the note's whole job. This guard exists to stop AGENTS.md's routing rotting, and the
 # routing is all in tracked files.
-SKIP_RE = re.compile(r"^(J\d\d_|\d{3}_|_control$|audit$)")
+SKIP_RE = re.compile(r"^(J\d\d_|\d{3}_|papers$|_control$|audit$)")
 
 # A repo path inside backticks: `playbook/checks.md`, `audit.py`, `lib/provenance.py`.
 # Anchored on a known extension so prose like `clean` or `--papers` is not mistaken for one.

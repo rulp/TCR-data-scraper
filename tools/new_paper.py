@@ -33,6 +33,8 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 INDEX = os.path.join(ROOT, "paper_source.md")
+#: Paper folders live together under papers/, never loose at the repo root.
+PAPERS = os.path.join(ROOT, "papers")
 
 sys.path.insert(0, HERE)
 import export_index                                  # noqa: E402  -- its rows() parses the index
@@ -225,7 +227,7 @@ def main(argv):
     # max + 1, NOT count + 1: a dropped paper keeps its row and its number.
     nid = "%03d" % (max((int(r[0]) for r in rows), default=0) + 1)
     name = label(author)
-    folder = os.path.join(ROOT, "%s_%s" % (nid, name))
+    folder = os.path.join(PAPERS, "%s_%s" % (nid, name))
     raw = os.path.join(folder, "raw")
 
     staged = []
@@ -255,7 +257,7 @@ def main(argv):
     if os.path.exists(folder):
         sys.exit("new_paper.py: %s already exists -- refusing to merge into it" % folder)
 
-    os.makedirs(raw)
+    os.makedirs(raw)   # makes papers/ too, on a workspace that has none yet
     for f in staged:
         shutil.move(os.path.join(inc, f), os.path.join(raw, f))
 

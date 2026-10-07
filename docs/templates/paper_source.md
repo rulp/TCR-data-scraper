@@ -4,10 +4,10 @@ One row per paper. **`ID` is assigned when the row is appended and never changes
 key that ties together every artifact for that paper:
 
 ```
-<ID>_<FirstAuthor>/                       the paper's folder — everything it produces
-<ID>_<FirstAuthor>/<ID>_<FirstAuthor>.py  its build script: raw/ -> clean_<ID>
-<ID>_<FirstAuthor>/raw/                   the acquired inputs
-<ID>_<FirstAuthor>/clean_<ID>.xlsx        and the clean_<ID>_* companions
+papers/<ID>_<FirstAuthor>/                the paper's folder — everything it produces
+papers/<ID>_<FirstAuthor>/<ID>_<FirstAuthor>.py   its build script: raw/ -> clean_<ID>
+papers/<ID>_<FirstAuthor>/raw/            the acquired inputs
+papers/<ID>_<FirstAuthor>/clean_<ID>.xlsx and the clean_<ID>_* companions
 ```
 
 Add new papers at the **end** and take the next free ID. Never renumber, never reuse an ID, and

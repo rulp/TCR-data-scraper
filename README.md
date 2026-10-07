@@ -143,7 +143,7 @@ turns the raw files into the spreadsheet, so nothing is done by hand — if a ru
 you re-run the script instead of redoing the paper:
 
 ```bash
-uv run --with pandas --with openpyxl python 007_Smith/007_Smith.py
+uv run --with pandas --with openpyxl python papers/007_Smith/007_Smith.py
 ```
 
 ### 4. Audit — check the data is really where it says it is
@@ -180,7 +180,8 @@ value is wrong, or the source changed — and those have different fixes.
 journals/            the journal list, and one folder per journal you've screened
   J01_Nat_Commun/      its scored candidates, the screen's notes, and incoming/ for
                        files you fetched by hand
-007_Author/ …        one folder per paper: raw files in, spreadsheet out
+papers/              the corpus — one folder per paper, raw files in and spreadsheet out
+  007_Author/          …each named by its permanent ID
 paper_source.md      this computer's list of papers, with their permanent IDs
 AUDIT.md             the latest audit result
 tools/               the small helper scripts you run by hand
@@ -198,8 +199,9 @@ SETUP.md             installing and running it on another computer
 1. **IDs are permanent.** Once a paper is `007`, it is `007` forever — the number is in file
    names and in provenance records. Add new papers at the end; never renumber or reuse, even
    for a paper that got dropped. `tools/new_paper.py` is what keeps this honest.
-2. **A paper's folder holds everything that paper produces**, build script included, and it
-   sits at the top level — never inside a journal folder.
+2. **Every paper lives in `papers/`**, one folder each, holding everything that paper
+   produces — build script included. Never inside a journal folder, and never loose at the top
+   level: that is what keeps the repo's own files findable once you have a few dozen papers.
 3. **IDs are local to this computer.** If you run this on a second machine, its `001` is a
    different paper. The PMID is what the two have in common — which is why the shared tracking
    sheet is keyed on it, and why you should check that sheet before extracting. See `SETUP.md`.

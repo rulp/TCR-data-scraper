@@ -50,7 +50,7 @@ the journal list — and nothing else. There are no papers in it. Your index sta
 | in git — shared, identical everywhere | not in git — yours alone |
 |---|---|
 | `AGENTS.md` `README.md` `SETUP.md` | `paper_source.md`, your index |
-| `procedures/` `playbook/` `docs/` `REPORT.md` | `<ID>_<Author>/` — every paper, `raw/` and output |
+| `procedures/` `playbook/` `docs/` `REPORT.md` | `papers/` — every paper folder, its `raw/` and its output |
 | `audit.py` `lib/` `tools/` `journals/probe.py` | `journals/J##_*/` — every sweep |
 | `journals/journals.md` `journals/method.md` | `AUDIT.md` · `audit/` |
 

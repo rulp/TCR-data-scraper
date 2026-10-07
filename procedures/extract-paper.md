@@ -58,16 +58,21 @@ nothing more.
 
 **A plain `.py`, not a notebook.** `<ID>_<FirstAuthor>.py` lives *inside* the paper's folder
 next to `raw/`, takes nothing but `raw/`, and writes the `clean_<ID>` files beside itself.
-Resolve its paths relative to the script, never to the working directory:
+Every paper folder sits under `papers/`, never at the repo root. Resolve the script's paths
+relative to the script, never to the working directory:
 
 ```python
 HERE = os.path.dirname(os.path.abspath(__file__))
 RAW  = os.path.join(HERE, "raw")
 OUT  = HERE
+# papers/<ID>_<FirstAuthor>/ -> papers/ -> repo root, so `from lib.provenance import ...` resolves
+sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
 ```
 
-so `uv run … python <ID>_<FirstAuthor>/<ID>_<FirstAuthor>.py` works from the repo root and from
-anywhere else. It exists so that a changed rule
+so `uv run … python papers/<ID>_<FirstAuthor>/<ID>_<FirstAuthor>.py` works from the repo root and
+from anywhere else. **Count the `dirname`s**: the script is two levels below the root, and `lib/`
+is at the root. One too few and the import fails; one too many and it silently picks up whatever
+sits above the repo. It exists so that a changed rule
 is a re-run instead of a re-extraction — thresholds get revised, publishers reissue
 supplementary files, and at this corpus size re-deriving every paper by hand is not an option.
 Keep it to that job:
@@ -93,7 +98,7 @@ python3 tools/new_paper.py --pmid <PMID> --from <J##> --dry-run
 ```
 
 It takes `max(existing) + 1` — never `count + 1`, because a dropped paper keeps its row and its
-number — refuses a PMID already in the index, creates `<ID>_<FirstAuthor>/raw/`, and **moves
+number — refuses a PMID already in the index, creates `papers/<ID>_<FirstAuthor>/raw/`, and **moves
 across anything already fetched into `journals/<J##>_*/incoming/<PMID>/`**. Files the screen
 listed in `NEEDS_HUMAN.md` are therefore already in `raw/` by the time Step 1 runs; check there
 before concluding a blocker is still blocking.

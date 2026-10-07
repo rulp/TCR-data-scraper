@@ -9,8 +9,9 @@
 # seeds it, docs/templates/paper_source.md, and a clone could not start.
 /paper_source.md
 
-# every paper folder -- build script, raw/ inputs and clean_<ID> outputs
-[0-9][0-9][0-9]_*/
+# every paper folder -- build script, raw/ inputs and clean_<ID> outputs. They all live
+# under papers/ so the repo root stays the toolkit and does not fill up with corpus.
+/papers/
 
 # every journal sweep folder, and the probe's control runs
 journals/J[0-9][0-9]_*/

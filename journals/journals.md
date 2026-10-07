@@ -30,7 +30,7 @@ journals/
     │                            one entry per file, with its destination and why a human
     ├── incoming/<PMID>/         those files once fetched -- by the screen's step 6 or by
     │                            hand -- waiting for an ID. Step 0 of the extraction moves
-    │                            them into <ID>_<Author>/raw/
+    │                            them into papers/<ID>_<Author>/raw/
     └── xml/<PMID>.xml           cached PMC XML (gitignored)
 ```
 
@@ -71,8 +71,8 @@ journals/
 - **Passing a screen does not assign an `ID`.** `screened.md` is the waiting list; a paper gets its
   permanent `ID`, its `paper_source.md` row and its root-level folder when it enters an extraction
   batch of 5. This keeps `paper_source.md` the small active queue rather than a list of hundreds.
-- **Promoted papers do NOT live here.** Once promoted, a paper's folder is created at the repo root
-  as `<ID>_<FirstAuthor>/`. Paper folders are **never** nested under a journal: nesting would make a
+- **Promoted papers do NOT live here.** Once promoted, a paper's folder is created under
+  `papers/` as `papers/<ID>_<FirstAuthor>/`. Paper folders are **never** nested under a journal: nesting would make a
   paper's path depend on where it was published and break every path already cited in provenance.
   `paper_source.md` stays this machine's single index, which is what makes a paper found twice —
   once by journal, once by a database citation — dedupe for free on PMID. Across machines the

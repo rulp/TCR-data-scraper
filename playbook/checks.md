@@ -155,7 +155,10 @@ The `clean` sheet has no room for attribution, so it lives in the `provenance` s
 
 ```python
 import sys, os
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# papers/<ID>_<FirstAuthor>/ -> papers/ -> repo root. Two dirname()s above the script's own
+# directory, because paper folders live under papers/ and lib/ is at the root.
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.dirname(os.path.dirname(HERE)))
 from lib.provenance import Prov, check_provenance, columns
 
 p = Prov()
