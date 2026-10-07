@@ -44,6 +44,13 @@ awk -F'\t' 'NR>1 && ($5=="likely"||$5=="unclear")' journals/J12_Nat_Biotechnol/c
   | sort -t'	' -k6,6nr | head -20 | cut -f1,3,5,6,7
 ```
 
+Subtract anything already in `screened.md` — its PASS, `## Parked` and `## Failed` tables
+together are the record of what gate C has seen:
+
+```bash
+cut -d'|' -f2 journals/J12_Nat_Biotechnol/screened.md | tr -d ' ' | grep -E '^[0-9]{8}$' | sort -u
+```
+
 **Never read `candidates.tsv` whole into context.** It is a queryable store; print a summary.
 
 ## Delegating a wave
@@ -129,6 +136,20 @@ The human-facing list for this journal. One row per PASS, newest work at the bot
 ```
 
 Keep PARK rows in a second table under `## Parked`, with the reason. Parked is not discarded.
+
+**FAIL rows go in a third table under `## Failed`** — PMID and a one-line reason, nothing more.
+Nothing else records that gate C ever looked at a paper: the wave query selects on `verdict` and
+`notes/<PMID>.md` is written for PASS and PARK only. Without this table the next wave re-selects
+every paper already failed and pays the full screening cost to reach the same answer, and a FAIL
+is indistinguishable from a paper never reached — which also makes the funnel counts unauditable.
+
+```markdown
+## Failed
+
+| PMID | Author | Why |
+|---|---|---|
+| 40705894 | Householder | designed minibinder, not a TCR; 1G4 named only as a comparator (judgement.md §21) |
+```
 
 ### 3. `NEEDS_HUMAN.md` — the shopping list
 

@@ -76,12 +76,20 @@ Decide which, state the evidence, then act. "I re-ran it and it passed" is not a
 
 An audit that has only ever passed has demonstrated nothing. Before trusting a run after any change
 to `audit.py`, re-run the negative control: copy a paper folder to a scratch directory, corrupt one
-CDR3 residue, swap one peptide for another paper's, and repoint one source string at a file that
-does not hold the value. Then:
+CDR3 residue, swap one peptide for another paper's, and repoint one source string at **a file that
+is present in `raw/` but does not hold that value**. Then:
 
 ```bash
 uv run --with pandas --with openpyxl --with pypdf python audit.py --root <scratch> --papers <ID>
 ```
 
 It must report the first two as `contradicted` and the third as `mislocated`, and exit non-zero.
-The real workbooks are never touched; delete the scratch copy afterwards.
+
+**The third case only works if that file exists in `raw/`.** Repoint at a filename that is not
+there and `locator()` resolves nothing, so the value falls through to the "found verbatim
+somewhere in this paper's materials" branch and is reported **`verified`** — the control passes
+while demonstrating nothing, which is the exact failure this section exists to prevent. Check the
+run really did print `mislocated` before trusting it.
+
+`--root` relocates everything the audit writes, `audit/` included, so the real workbooks and the
+real `audit/reads/` are both untouched; delete the scratch copy afterwards.

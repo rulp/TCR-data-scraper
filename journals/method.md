@@ -28,14 +28,23 @@ audited for what it silently dropped.
   AND (epitope[tiab] OR peptide[tiab] OR pMHC[tiab] OR HLA[tiab] OR antigen[tiab])
   NOT review[pt]
   AND "<NLM [ta]>"[ta]
-  AND <window>[dp]
+# the window is NOT a term clause -- it is passed as parameters:
+#   &datetype=edat&mindate=<from>&maxdate=<to>
 ```
+
+**The window is `edat`, never `[dp]`.** `procedures/screen-corpus.md` is the rule: records get
+indexed late, so a publication-date window silently misses exactly the newest papers — the ones a
+sweep is run to find. `datetype` only takes effect alongside `mindate`/`maxdate`, which is why the
+window sits in the parameters rather than the term. The two agreed on `[dp]` until 2026-10-06 and
+were consistently wrong together; on J01 over 2024–2026 both forms return 84, because a window
+whose end is in the future gives late indexing time to catch up — the divergence appears at the
+leading edge, which is where it matters.
 
 Reproduce a count:
 
 ```bash
-curl -sS "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&rettype=count&retmode=json" \
-  --data-urlencode 'term=("T cell receptor"[tiab] OR TCR[tiab]) AND (epitope[tiab] OR peptide[tiab] OR pMHC[tiab] OR HLA[tiab] OR antigen[tiab]) NOT review[pt] AND "Nat Commun"[ta] AND 2024/01/01:2026/12/31[dp]' -G
+curl -sS -G "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&rettype=count&retmode=json&datetype=edat&mindate=2024/01/01&maxdate=2026/12/31" \
+  --data-urlencode 'term=("T cell receptor"[tiab] OR TCR[tiab]) AND (epitope[tiab] OR peptide[tiab] OR pMHC[tiab] OR HLA[tiab] OR antigen[tiab]) NOT review[pt] AND "Nat Commun"[ta]' 
 ```
 
 **`Broad`** is that query's count. **`Plat`** is the same query with the peptide/epitope clause

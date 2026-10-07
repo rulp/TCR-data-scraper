@@ -5,7 +5,7 @@ Sections keep their original `REPORT` numbers; `REPORT.md` is the index.
 
 **§4, §7, §8 are solved.** **§11–§12 are marked IGNORE**: they cannot be resolved without a
 human, so do not burn time re-attempting them — **§13 explains why §12 happens** and what to ask
-the user for.
+the user for. **§19 is reference**: what the PMC APIs hand you, and what they do not.
 
 ---
 
@@ -99,13 +99,16 @@ execute the challenge script.
 
 What to do instead, in order:
 
-1. **Europe PMC's bulk endpoint**, which sidesteps the gate entirely when the paper qualifies:
+1. **Europe PMC's bulk endpoint** — *one* quick attempt, and do not wait on it:
    ```
    https://www.ebi.ac.uk/europepmc/webservices/rest/PMC<digits>/supplementaryFiles
    ```
-   Returns a ZIP of every supplementary file. For a paper that is in PMC but not open access it
-   returns a ~300-byte XML error, `"Article with id PMC… is not open access one"` — that is a
-   definitive no, so stop rather than retrying variants.
+   It returns a ZIP of every supplementary file and sidesteps the gate **when it works**, which
+   is not often: it serves only the open-access subset, refuses every author-manuscript paper
+   with a ~300-byte `"Article with id PMC… is not open access one"`, and **timed out on all six
+   open-access papers tried here** (§19). So give it one short-timeout attempt and move to step 2
+   — the refusal is a definitive no, and a timeout is not worth a retry. **Do not build any
+   automated step on this endpoint.**
 2. **The publisher CDN**, which is usually ungated (Elsevier `ars.els-cdn.com/content/image/1-s2.0-<PII>-mmcN.<ext>`;
    Springer `static-content.springer.com` / `media.springernature.com`).
 3. **Main-paper figure images**, which `/bin/` *does* serve without any challenge — the §1/§12
@@ -143,7 +146,8 @@ of candidate papers are in PMC**, so this route covers nearly the whole corpus.
 - Europe PMC `.../webservices/rest/<PMCID>/supplementaryFiles` — a whole-article ZIP, but **only
   for the open-access subset**. It refuses every author-manuscript paper (`"is not open access
   one"`), which is where NIH-funded Cell/Science/Nature papers live — and
-  it timed out on all six OA papers tried. Do not build on it.
+  it timed out on all six OA papers tried. Do not build on it. §13 step 1 is the same endpoint,
+  kept there as a single cheap attempt before the publisher CDN, for the same reason.
 
 So: **the inventory is free and reliable; the bytes are not.** A screen should judge from the
 inventory and defer downloading, and a gated file becomes a precise request to the user — name,

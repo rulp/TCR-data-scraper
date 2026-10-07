@@ -1,4 +1,4 @@
-# web_scraper: extracting TCR training data from papers
+# TCR-data-scraper: extracting TCR training data from papers
 
 ## What this is for
 
@@ -128,7 +128,7 @@ AGENTS.md            instructions for the AI agent (not meant for people)
 SETUP.md             installing and running it on another computer
 ```
 
-## Three rules that will bite you
+## Four rules that will bite you
 
 1. **IDs are permanent.** Once a paper is `007`, it is `007` forever — the number is in file
    names and in provenance records. Add new papers at the end; never renumber or reuse, even

@@ -11,7 +11,7 @@ works inside a venv that has them. Otherwise:
 
     uv run --with pandas --with openpyxl --with pypdf python audit.py
 
-    audit.py                   # tiers 1-3 over every paper, writes AUDIT.md
+    audit.py                   # every paper in the tree, writes AUDIT.md
     audit.py --papers <ID>,... # only these paper IDs; writes AUDIT_partial.md instead
     audit.py --figures         # also (re)emit blind transcription task cards
     audit.py --no-network      # skip external re-fetching; PDB checks -> unverifiable
@@ -59,9 +59,13 @@ def arg(flag, default=None):
 if "--help" in sys.argv or "-h" in sys.argv:
     print(__doc__)          # an explicit help request is a success, not an error
     sys.exit(0)
+_FLAGS = ("--papers", "--figures", "--no-network", "--root", "--help", "-h")
+_values = {sys.argv[i + 1] for i, a in enumerate(sys.argv[1:], 1)
+           if a in ("--papers", "--root") and i + 1 < len(sys.argv)}
 for _a in sys.argv[1:]:
-    if _a.startswith("--") and _a not in ("--papers", "--figures", "--no-network",
-                                          "--root", "--help"):
+    # Single-dash too: `audit.py -x` used to be ignored and proceed to a full run that
+    # overwrites AUDIT.md. SETUP.md promises an unknown flag is refused, not ignored.
+    if _a.startswith("-") and _a not in _FLAGS and _a not in _values:
         sys.exit("audit.py: unknown option %s\n%s" % (_a, __doc__))
 
 # Fail loudly on a missing dependency. A missing pypdf used to be swallowed, which turned
@@ -79,9 +83,12 @@ if _missing:
                 " ".join("--with " + m for m in ("pandas", "openpyxl", "pypdf"))))
 
 # --root audits a different tree (used for the negative control, which corrupts a scratch
-# copy on purpose). The report follows the root so a test run cannot overwrite AUDIT.md.
+# copy on purpose). EVERYTHING the audit writes follows the root -- the report and the
+# audit/ state directory alike. Pinning audit/ to HERE meant a `--root <scratch> --figures`
+# run overwrote the real tree's task cards and reused its blind reads, and audit/reads/
+# is the one thing SETUP.md says cannot be regenerated honestly.
 ROOT = arg("--root", HERE)
-AUDIT = os.path.join(HERE, "audit")
+AUDIT = os.path.join(ROOT, "audit")
 SCHEMA = ["Va", "Ja", "CDR3a", "Vb", "Jb", "CDR3b",
           "Antigen", "MHC", "pMHC_species", "TCR_species"]
 # These two record a decision about provenance, not a string lifted from the paper.
@@ -225,7 +232,7 @@ TABLE = re.compile(r"(?i)\btable\s*(s?\d+[a-z]?)")
 
 
 def locator(source, idx):
-    """Resolve the files a source string points at. Returns (paths, kind)."""
+    """Resolve the files a source string points at. Returns a sorted list of paths."""
     paths = []
     for m in FILEISH.findall(source):
         name = m[0] if isinstance(m, tuple) else m
@@ -465,7 +472,18 @@ def main():
     papers = arg("--papers")
     only = set(papers.split(",")) if papers else None
 
-    books = sorted(glob.glob(os.path.join(ROOT, "0*", "clean_0*.xlsx")))
+    # Both halves must accept any three digits. Anchored on a literal `0`, this used to
+    # find only 000_*-099_*, so a corpus past 100 papers audited 99 of them and still
+    # printed `0 contradicted` and exited 0 -- the loudest possible all-clear from a
+    # check that had stopped looking. Matches .gitignore's `[0-9][0-9][0-9]_*`.
+    books = sorted(glob.glob(os.path.join(ROOT, "[0-9][0-9][0-9]_*",
+                                          "clean_[0-9][0-9][0-9].xlsx")))
+    have = {re.search(r"clean_(\d+)\.xlsx", b).group(1) for b in books}
+    if only:
+        gone = sorted(only - have)
+        if gone:
+            sys.exit("audit.py: no workbook for paper ID(s): %s\n  found: %s"
+                     % (", ".join(gone), ", ".join(sorted(have)) or "none"))
     reads = load_reads()
     results, jobs = [], {}
 
@@ -490,8 +508,26 @@ def main():
                   "not `contradicted`. See SETUP.md.", flush=True)
 
         seen = set()
+        # The two sheets are joined on positional index below. A provenance sheet of a
+        # different length yields NaN keys, and groupby drops those by default -- rows
+        # would vanish from the audit instead of failing it. lib/provenance.py makes the
+        # same check at build time (C12); the independent check cannot afford to skip it.
+        if len(prov) != len(clean):
+            results.append(dict(paper=pid, field="-", value="-", source="-",
+                                verdict="contradicted",
+                                evidence="provenance has %d rows, clean has %d; they are "
+                                         "aligned positionally and must match 1:1"
+                                         % (len(prov), len(clean))))
+            continue
         for col in SCHEMA:
             scol = col + "_source"
+            if col not in clean.columns:
+                # A column missing from `clean` is a finding about this paper, not a
+                # reason to abort the whole corpus run with a KeyError.
+                results.append(dict(paper=pid, field=col, value="-", source="-",
+                                    verdict="contradicted",
+                                    evidence="clean sheet has no %s column" % col))
+                continue
             if scol not in prov.columns:
                 results.append(dict(paper=pid, field=col, value="-", source="-",
                                     verdict="contradicted", evidence="missing " + scol))

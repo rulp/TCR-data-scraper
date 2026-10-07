@@ -37,7 +37,9 @@ def valid_cdr3(s):
     return bool(s) and set(s) <= AA and s.startswith("C") and 8 <= len(s) <= 22
 
 def valid_peptide(s, mhc_class="I"):
-    lo, hi = (8, 11) if mhc_class == "I" else (9, 25)
+    # 13 is the class-II floor, not 9 -- judgement.md section 18 and extract-paper
+    # both state 13-25, and this helper is the only one of the three that runs.
+    lo, hi = (8, 11) if mhc_class == "I" else (13, 25)
     return bool(s) and set(s) <= AA and lo <= len(s) <= hi
 ```
 
@@ -163,7 +165,9 @@ p.set("Antigen", origin="file",   source="Table S3, column D")
 p.set("MHC",     origin="figure", source="Fig. S6B legend")
 p.set("pMHC_species", origin="text", source="Methods, library design")
 p.set("TCR_species",  origin="text", source="Results, donor description")
-prov.append(p.row(tcr_id=t, assay="CD69 upregulation"))   # extras are free-form
+# source_pmid is REQUIRED -- row() raises without it. Local IDs differ between
+# machines, so the PMID is the only key two workspaces can merge on.
+prov.append(p.row(tcr_id=t, source_pmid=PMID, assay="CD69 upregulation"))
 
 prov = pd.DataFrame(prov)[columns(pd.DataFrame(prov).columns)]
 check_provenance(clean, prov, "<ID>")     # raises unless every row, every field, is attributed

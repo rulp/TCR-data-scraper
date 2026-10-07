@@ -6,10 +6,12 @@ both machines agree on. This prints the Papers tab as CSV, ready to paste.
 
     python3 tools/export_index.py                 # this machine's name from hostname
     python3 tools/export_index.py --machine mac   # or name it yourself
+    python3 tools/export_index.py --help
 
 Standard library only.
 """
 import csv
+import datetime
 import os
 import socket
 import sys
@@ -30,18 +32,25 @@ def rows(text):
 
 def main(argv):
     if "--help" in argv or "-h" in argv:
-        sys.exit(__doc__)
+        print(__doc__)      # an explicit help request is a success, not an error
+        return 0
     machine = argv[argv.index("--machine") + 1] if "--machine" in argv else socket.gethostname()
 
     if not os.path.exists(INDEX):
         sys.exit("no paper_source.md yet -- run: python3 tools/init_workspace.py")
 
     out = csv.writer(sys.stdout)
-    out.writerow(["PMID", "Author", "Year", "Journal", "Machine", "Local ID", "Rows", "Status"])
+    # Must match docs/templates/tracking_sheet.csv exactly, or the paste lands one
+    # column short and silently shifts Status into Date.
+    out.writerow(["PMID", "Author", "Year", "Journal", "Machine", "Local ID", "Rows",
+                  "Status", "Date"])
+    today = datetime.date.today().isoformat()
     n = 0
     for c in rows(open(INDEX, encoding="utf-8").read()):
         pid, pmid, author, year, journal = c[0], c[1], c[2], c[3], c[4]
-        out.writerow([pmid, author, year, journal, machine, pid, "", c[7]])
+        # `Rows` stays blank: it is the clean-sheet row count, which lives in the
+        # workbook, not in the index this reads.
+        out.writerow([pmid, author, year, journal, machine, pid, "", c[7], today])
         n += 1
     print("# %d paper(s) from %s" % (n, machine), file=sys.stderr)
     return 0

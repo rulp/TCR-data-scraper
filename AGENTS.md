@@ -37,7 +37,7 @@ paper in hand — to recover a TCR sequence it only names — is extraction work
 ## Layout
 
 ```
-web_scraper/
+TCR-data-scraper/
 ├── AGENTS.md                this file — identity, indexing, routing. Start here.
 ├── README.md                the same pipeline for PEOPLE — keep it non-technical
 ├── SETUP.md                 running it on another machine

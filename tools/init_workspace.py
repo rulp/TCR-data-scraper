@@ -2,14 +2,16 @@
 """Set up this machine's workspace on a fresh clone.
 
 The repo ships the toolkit only -- procedures, playbook, scripts, the journal list.
-Two things are per-machine and gitignored, so a clone has to create them:
+The rest is per-machine and gitignored, so a clone has to create it:
 
   * paper_source.md, this machine's index, seeded from docs/templates/
   * the skill adapters, which let your agent auto-invoke a procedure by name
+  * empty journals/ and audit/ directories for the workspace to fill
 
     python3 tools/init_workspace.py                   # both adapter folders
     python3 tools/init_workspace.py --tools claude    # just one
-    python3 tools/init_workspace.py --list            # show what would be written
+    python3 tools/init_workspace.py --list            # list the adapter paths only
+    python3 tools/init_workspace.py --help
 
 SKILL.md is the Agent Skills open standard, so the file is the same everywhere --
 only the folder each tool looks in differs, and no tool lets you redirect it. The
@@ -49,6 +51,19 @@ procedure is reachable by path from AGENTS.md.
 """
 
 FM = re.compile(r"\A---\n(.*?)\n---\n", re.S)
+
+
+def yaml_scalar(text):
+    """Quote a description for YAML.
+
+    Descriptions come from a procedure's own frontmatter and contain ': ' freely
+    ("Use for literature sweeps, corpus building, or ..."). Interpolated raw, a ': '
+    or a leading [ { # makes the generated SKILL.md invalid YAML -- and check_docs.py
+    validates the SOURCE procedures, never the generated stub, so the only symptom is
+    a skill that silently never matches. That is the failure this file exists to stop.
+    """
+    return '"%s"' % (text.replace("\\", "\\\\").replace('"', '\\"')
+                     .replace("\n", " ").strip())
 
 
 def procedures():
@@ -119,7 +134,8 @@ def main(argv):
             # Always rewritten: these are derived files, and a stale description is
             # how a skill quietly stops being matched.
             with open(os.path.join(d, "SKILL.md"), "w", encoding="utf-8") as fh:
-                fh.write(STUB % {"name": name, "description": description})
+                fh.write(STUB % {"name": name,
+                                 "description": yaml_scalar(description)})
             written += 1
 
     for f in made:

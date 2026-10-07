@@ -110,10 +110,22 @@ def eutils(tool, **kw):
 
 # ---------------------------------------------------------------- gate A
 def harvest(ta, win):
-    term = '"%s"[ta] AND %s AND %s[dp]' % (ta, CORE, win)
-    d = json.loads(fetch(eutils("esearch", db="pubmed", retmode="json",
-                                retmax=2000, term=term)))
-    return term, d["esearchresult"]["idlist"]
+    """Gate A. Windowed on datetype=edat, NEVER [dp].
+
+    screen-corpus.md: "Records get indexed late, and a publication-date window silently
+    misses them." A [dp] window hides exactly the newest papers -- the ones a sweep is
+    run to find. edat is the Entrez date: when the record actually became findable.
+    datetype only takes effect alongside mindate/maxdate, so the window moves out of the
+    term and into the parameters.
+    """
+    lo, hi = win.split(":")
+    term = '"%s"[ta] AND %s' % (ta, CORE)
+    d = json.loads(fetch(eutils("esearch", db="pubmed", retmode="json", retmax=2000,
+                                term=term, datetype="edat", mindate=lo, maxdate=hi)))
+    # What goes into sweep.md has to be the whole query, window included, or the sweep
+    # is not reproducible from its own log.
+    return "%s  [datetype=edat mindate=%s maxdate=%s]" % (term, lo, hi), \
+        d["esearchresult"]["idlist"]
 
 
 def summaries(pmids):

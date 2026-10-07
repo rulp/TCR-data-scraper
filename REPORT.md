@@ -33,7 +33,7 @@ exactly one place.
 | — | The checks, as runnable assertions (C1–C12) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |
 
-**§1–§10 and §13–§20 are solved or have a stated workaround** — reuse the method. **§11–§12 are
+**§1–§10 and §13–§21 are solved or have a stated workaround** — reuse the method. **§11–§12 are
 marked IGNORE**: they cannot be resolved without a human, so do not burn time re-attempting them.
 
 `playbook/judgement.md` is mandatory for every extraction and holds the *reasoning*;

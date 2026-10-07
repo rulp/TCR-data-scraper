@@ -100,37 +100,52 @@ def columns(extra=()):
 
 
 def check_provenance(clean, prov, label=""):
-    """C12. Assert the provenance frame really attributes every clean row."""
+    """C12. Verify the provenance frame really attributes every clean row.
+
+    Raises ``ValueError`` rather than asserting. C12 is the last gate before a workbook
+    ships, and `python -O` strips every `assert` in the interpreter -- which would have
+    disabled this check wholesale and silently, exactly the class of failure it exists
+    to catch.
+    """
     tag = (label + ": ") if label else ""
-    assert len(clean) == len(prov), (
-        "%sprovenance has %d rows but clean has %d -- they must align 1:1"
-        % (tag, len(prov), len(clean)))
+
+    def bad(msg):
+        raise ValueError(tag + msg)
+
+    if len(clean) != len(prov):
+        bad("provenance has %d rows but clean has %d -- they must align 1:1"
+            % (len(prov), len(clean)))
 
     for c in KEYS + ["origin", "extrapolated"] + [s + "_source" for s in SCHEMA]:
-        assert c in prov.columns, "%smissing provenance column %r" % (tag, c)
+        if c not in prov.columns:
+            bad("missing provenance column %r" % c)
 
-    blank_pmid = (prov["source_pmid"].isna()
-                  | (prov["source_pmid"].astype(str).str.strip() == ""))
-    assert not blank_pmid.any(), (
-        "%s%d row(s) have no source_pmid -- it is the only key that survives across machines"
-        % (tag, int(blank_pmid.sum())))
+    for key in KEYS:
+        blank = prov[key].isna() | (prov[key].astype(str).str.strip() == "")
+        if blank.any():
+            bad("%d row(s) have no %s -- first at position %d%s"
+                % (int(blank.sum()), key, int(blank.values.argmax()),
+                   "; it is the only key that survives across machines"
+                   if key == "source_pmid" else ""))
 
     for col in [s + "_source" for s in SCHEMA]:
         blank = prov[col].isna() | (prov[col].astype(str).str.strip() == "")
-        assert not blank.any(), (
-            "%s%d row(s) have an empty %s -- every field must say where it came from; "
-            "first at position %d" % (tag, int(blank.sum()), col, int(blank.values.argmax())))
+        if blank.any():
+            bad("%d row(s) have an empty %s -- every field must say where it came from; "
+                "first at position %d"
+                % (int(blank.sum()), col, int(blank.values.argmax())))
 
     for i, o in enumerate(prov["origin"].astype(str)):
-        bad = set(o.split("+")) - ORIGINS
-        assert not bad, "%srow %d has unknown origin(s) %s; allowed: %s" % (
-            tag, i, sorted(bad), sorted(ORIGINS))
+        unknown = set(o.split("+")) - ORIGINS
+        if unknown:
+            bad("row %d has unknown origin(s) %s; allowed: %s"
+                % (i, sorted(unknown), sorted(ORIGINS)))
 
     for i, (o, e) in enumerate(zip(prov["origin"].astype(str), prov["extrapolated"].astype(str))):
         want = "no" if set(o.split("+")) <= NOT_EXTRAPOLATED else "yes"
-        assert e == want, (
-            "%srow %d: origin=%r implies extrapolated=%r but the row says %r"
-            % (tag, i, o, want, e))
+        if e != want:
+            bad("row %d: origin=%r implies extrapolated=%r but the row says %r"
+                % (i, o, want, e))
     return True
 
 
@@ -151,9 +166,20 @@ def finalize(prov, origins):
     missing = [c for c in SCHEMA if c + "_source" not in prov.columns]
     if missing:
         raise ValueError("no <col>_source for: %s" % ", ".join(missing))
-    if "source_pmid" not in prov.columns:
-        raise ValueError("no source_pmid column -- set prov['source_pmid'] = PMID before "
-                         "finalize(); it is the only key that survives across machines")
+    # Both KEYS, and populated -- not merely present. finalize() used to check only that
+    # source_pmid existed, so a column-wise script setting it to "" passed here and was
+    # caught only if check_provenance() happened to be called too; and a missing tcr_id
+    # surfaced as a bare KeyError from columns() below rather than as this message.
+    for key in KEYS:
+        if key not in prov.columns:
+            raise ValueError(
+                "no %s column -- set prov[%r] before finalize()%s"
+                % (key, key, "; it is the only key that survives across machines"
+                   if key == "source_pmid" else ""))
+        blank = prov[key].isna() | (prov[key].astype(str).str.strip() == "")
+        if blank.any():
+            raise ValueError("%d row(s) have a blank %s; first at position %d"
+                             % (int(blank.sum()), key, int(blank.values.argmax())))
     missing = [c for c in SCHEMA if c not in origins]
     if missing:
         raise ValueError("no origin given for: %s" % ", ".join(missing))
