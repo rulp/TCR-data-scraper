@@ -22,6 +22,7 @@ moment someone edits the script.
 | C10 | Figure transcription cross-check | a figure read disagrees with a file | `figures.md` §2 |
 | C11 | Emit-time sanity | `NA`s, open workbooks, row limits | `fetching.md` §7, §8 |
 | C12 | Per-row attribution | a row does not say where its values came from | `AGENTS.md`, the extrapolation invariant |
+| C13 | Derived gene call separates | a V or J matched from sequence cannot be told from the next gene | `judgement.md` §28 |
 
 ---
 
@@ -187,3 +188,63 @@ C12 runs inside every build.
 
 **A paper whose every row reads `origin = text` has not been attributed, it has been rubber-stamped.**
 Real rows mix: the peptide from a table, the α chain from a database, the allele from a legend.
+
+## C13 — a derived gene call must separate from the next gene
+
+Applies only to a `Va`/`Ja`/`Vb`/`Jb` written from a **sequence match**. A gene a source states
+is taken at the source's precision and this check does not apply to it. `judgement.md` §28 has
+the measured margins behind the two numbers here, and the refusal rule this check enforces.
+
+```python
+J_FLOOR = 12   # a cheap guard against a degenerate match, NOT evidence: the lowest real score
+               # in the corpus is 12, so this floor has never excluded anything. V needs none.
+MARGIN  = 5    # the conserved `FG.GT..` tail scores 3-7 for the next gene; a real call runs past it
+
+def call_gene(dom, prefix, ref, score, floor=0):
+    """Best gene, its top-3 hits, and the best score belonging to a DIFFERENT gene.
+
+    The runner-up is sometimes a second allele of the same gene, which is not an ambiguity at
+    the precision being written -- so the margin is taken over the best other GENE.
+    """
+    hits = sorted(((score(dom, s), g) for g, s in ref.items() if g.startswith(prefix)),
+                  reverse=True)
+    gene = hits[0][1].split("*")[0]
+    other = next(h for h in hits if h[1].split("*")[0] != gene)
+    ok = hits[0][0] >= floor and hits[0][0] > other[0] + MARGIN
+    return gene, hits[:3], other, ok
+```
+
+**The failing branch drops the row; it does not relax the test.**
+
+```python
+gene, top3, other, ok = call_gene(dom, "TRBJ", ref, suffix_identity, floor=J_FLOOR)
+if not ok:
+    unresolved.append(dict(tcr_id=t, field="Jb",
+                           candidates="; ".join("%s %d" % (g, n) for n, g in top3),
+                           best_other_gene="%s %d" % (other[1], other[0]),
+                           reason="no margin over the next gene"))
+    continue                       # this row never reaches `clean`
+
+# A counted, explained drop is a result; a silent one is data loss. Assert the count so a
+# changed input announces itself, and ship the companion beside the workbook.
+assert len(unresolved) == 0, "unresolved gene calls: %s" % unresolved
+pd.DataFrame(unresolved).to_csv(os.path.join(OUT, "clean_%s_unresolved.csv" % ID), index=False)
+```
+
+A passing call records its numbers, because C12 asks where a value came from and "IMGT" is not an
+answer a reader can check:
+
+```python
+p.set("Jb", origin="external",
+      source="IMGT GENE-DB 2026-10-07: %s at %d/%d residues; next gene %s at %d" % (...))
+```
+
+**A bare `assert` is a valid implementation when the paper has one receptor, or one panel that
+stands or falls together** — crashing the build and dropping the only row are the same decision,
+and the three J01 papers that needed a derived call are written that way. The companion-file branch earns its keep as soon
+as one paper carries receptors whose calls can fail independently: there, an assert would throw
+away the resolvable rows along with the ambiguous one.
+
+**`Va`, `Ja`, `Vb` and `Jb` being mandatory is a rule about what a shipped row contains.** It is
+not a reason to widen `MARGIN`, to take the top hit because it is probably right, or to write a
+gene the evidence does not separate. A row that cannot supply all four is not a row.

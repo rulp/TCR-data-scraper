@@ -345,35 +345,131 @@ Resolve these per paper and record the choice in `source_notes`:
 Three papers in one batch printed CDR3s, or deposited chains, and no IMGT gene call anywhere:
 a patent-sourced panel, a structural paper with zero `TRAV`/`TRBV` strings in its full text, and
 a mechanism paper that named its V genes but not its J genes and cited another paper for the rest.
-`Va`, `Ja`, `Vb` and `Jb` are mandatory, so "not stated" is not an answer.
+`Va`, `Ja`, `Vb` and `Jb` are mandatory, so "not stated" is not an answer — and neither is a guess.
+**The mandatory-column invariant says what a shipped row contains; it is not a licence to
+manufacture one.** The refusal rule at the end of this section is the half that makes the rest
+safe. Read it before you start matching, not after a call comes out thin.
 
 **Look for a stated gene before assigning one.** In order of how much it is worth:
 
 | Where | What it gives |
 |---|---|
 | the paper's Methods | occasionally the whole call, with alleles — take it |
-| a **patent's prose**, not its sequence listing | "FR1, FR2 and FR3 … corresponding to a TRAV 26-2 chain … those of a TRBV19 chain". The listing has only sequences; the description names the genes |
+| a **patent's prose**, not its sequence listing | "FR1, FR2 and FR3 … corresponding to a TRAV 26-2 chain … those of a TRBV19 chain". The listing has only sequences; the description names the genes. Seen once, US12018062 — a place to look, not a rule about patents |
 | the **cited** paper | often repeats the same gap — check, do not assume |
 | the cited paper's **structures** | the end of the chase. A PDB entry carries whole chains |
-| RCSB entity names | `T cell receptor beta variable 6-5` is an annotation, not evidence. Useful as a cross-check on your own call, never as the source |
+| RCSB entity names | `T cell receptor beta variable 6-5` is an annotation someone else derived, carrying no score. Cross-check your own call against it. It has not been caught wrong here — it has also never been the evidence |
 
-**Assigning it: match against the IMGT reference, which is one ungated download.**
+**Assigning it: match against the IMGT reference, one ungated download** (fetched 2026-10-07; it
+is a plain file, so if the name moves look for the current one under `download/GENE-DB/`):
 
 ```
 https://www.imgt.org/download/GENE-DB/IMGTGENEDB-ReferenceSequences.fasta-AA-WithoutGaps-F+ORF+inframeP
 ```
 
-Two things about the matching, both learned the hard way:
+This is a hand-rolled ungapped matcher standing in for **IMGT/V-QUEST**, which is the
+authoritative tool and which handles the indels that separate some V genes inside one family.
+Nothing here has needed it yet. A call that lands near the threshold is the reason to go and run
+it, rather than the reason to argue about the threshold.
+
+Three things about the matching, all learned the hard way:
 
 - **Do not anchor at position 0.** A crystallised construct begins `MAKEVEQ…` where the germline
   begins `KNEVEQ…`, and a prefix match then scores the *correct* gene at 1/92. Score the best
-  ungapped offset instead. With the offset, the same chain scores 87/92.
-- **Require the margin over the best OTHER GENE, not the runner-up.** The runner-up is almost
-  always a second allele of the same gene — `TRBJ2-7*02` differs from `*01` by one residue — so a
-  plain runner-up test rejects calls that are not ambiguous at all.
+  ungapped offset instead — `range(-5, 12)` has covered every construct seen. With the offset the
+  same chain scores 87/92.
+- **Cut the chain at the end of FR4 before calling J:** `A[:A.index("GKGTKLSVIP") + 10]`. The
+  suffix match runs against the whole J-REGION, and a deposited chain continues on into the
+  constant domain, so an **untrimmed chain scores 0/15 against every J gene**. That fails the
+  margin test instead of producing a wrong call, which is the right way round — but it presents as
+  an ambiguous paper rather than as a forgotten step, so check the cut before believing the
+  ambiguity.
+- **Require the margin over the best OTHER GENE, not the runner-up.** Sometimes the runner-up is
+  a second allele of the same gene — `TRBJ2-7*02` differs from `*01` by one residue — and a plain
+  runner-up test then rejects a call that is not ambiguous at all. It is not always so: in two of
+  these three papers the runner-up was a different gene.
 
-**J comes from FR4**, which is short (`FGKGTKLSVIP`, `FGPGTRLTVT`) but distinctive, and which
-affinity maturation leaves alone even when it rewrites the junction.
+### The thresholds, and what is actually under them
+
+```python
+assert top >= FLOOR and top > best_other_gene + 5
+```
+
+Every gene call made in J01, with controls measured by scoring a chain as something it is not:
+
+| Call | How it was settled | Score | Best other gene | Margin |
+|---|---|---|---|---|
+| TRAV26-2 (Han) | patent prose, match corroborates | 90/92 | TRAV26-1 at 62 | 28 |
+| TRBV19 (Han) | patent prose, match corroborates | 94/95 | TRBV28 at 55 | 39 |
+| TRAV12-2 (Murugesan) | derived | 87/92 | TRAV12-3 at 65 | 22 |
+| TRBV6-5 (Murugesan) | derived | 90/95 | TRBV6-9 at 81 | 9 |
+| TRBV6-2 (Wang) | **refused**; the papers' own text used instead | 93/95 | TRBV6-3 at 93 | **0** |
+| TRAJ28 (Han) | derived | 20/21 | TRAJ50 at 5 | 15 |
+| TRAJ39 (Murugesan) | derived | 16/20 | TRAJ51 at 3 | 13 |
+| TRBJ1-6 (Wang) | derived | 15/17 | 7 | 8 |
+| TRBJ1-1 (Murugesan) | derived | 14/15 | TRBJ1-2 at 7 | 7 |
+| TRAJ28 (Wang) | derived | **12**/21 | 5 | 7 |
+| TRBJ2-7 (Han) | derived | **13**/15 | TRBJ1-6 at 7 | **6** |
+| *α chain scored as a β chain* | control | 18/96 | 17 | 1 |
+| *MHC heavy chain scored as a V* | control | 11/89 | 11 | 0 |
+| *MHC heavy chain scored as a J* | control | 2/20 | 2 | 0 |
+
+Han is PMID 42288475, Murugesan 39578466, Wang 41315272 — named by author and PMID, not by
+paper ID, which means something only on the machine that assigned it.
+
+**The margin is the test that works.** Real calls separate by 6–39; a chain that is not the thing
+being called separates by 0–1. An order of magnitude, measured — which is why the margin and not
+the raw score is what decides.
+
+**The margin threshold has one residue of headroom.** The tightest real call in the corpus,
+TRBJ2-7 on Han's unmutated parent β, clears `> other + 5` with a margin of 6. Why 5 and not some
+other number: the best other *gene* scores 3–7 on every J call above, because that is the length
+of the `FG.GT..` tail every J gene shares. A margin past 5 means the match has run beyond the
+conserved motif into gene-specific residues. Hold the number as that statement, not as a constant
+someone tuned.
+
+**The absolute floor is weaker than it looks.** The Han script uses `>= 12`, and the two lowest real
+scores in the table are 12 and 13. A floor set at the observed minimum has not been shown to
+exclude anything — it describes this corpus rather than testing the next one. Keep it as a cheap
+guard against a degenerate match; do not read it as independent evidence. **V needs no floor**: a
+V-REGION is 89–96 residues, a real call takes 87–94 of them, and a wrong chain takes 11–18.
+
+### The refusal rule
+
+Exactly three outcomes. There is no fourth.
+
+1. **A source states the gene** → use the source, at the precision the source states. The match is
+   a cross-check and is recorded as one. Han's patent names TRAV26-2 and TRBV19 and the match
+   agrees by 28 and 39, but the provenance cites the patent, because that is where the call came
+   from.
+2. **Nothing states it, and the margin clears** → derive it, `origin="external"`, and put the
+   numbers in the provenance string: the gene, the score over the reference length, the best other
+   gene and its score. A reader must be able to judge the call without redoing it.
+3. **Nothing states it, and the margin fails** → **the row does not ship.** Write it to
+   `clean_<ID>_unresolved.csv` with its top three candidates and their scores, assert the count,
+   and say so in `source_notes`. A dropped row that is counted and explained is a result; a
+   dropped row that is silent is data loss. This is **C13**.
+
+Three things that are never a fourth outcome:
+
+- **Do not widen the threshold to admit the data in hand.** It is a floor, not a dial. When the
+  calls in front of you fail it, the honest readings are "this chain needs better evidence" and
+  "these are genuinely two genes" — never "5 was too strict". The threshold is worth changing on
+  evidence about the *method*; it is never worth changing to raise a row count.
+- **Do not take the top hit because it is probably right.** Wang's β chain matches TRBV6-2\*01 and
+  TRBV6-3\*01 at 93/95 each. Which one sorts first is an artefact of the sort, not a finding.
+- **Do not fill a mandatory column with a guess in order to keep the row.** A row that cannot
+  supply all four gene calls is not a row missing a field; it is not a row.
+
+Branch 1 is the usual way out of branch 3 and is worth exhausting first. Wang's tie was settled
+because the *papers* state TRBV6-2, not because the structure was re-examined; the match's job
+there was to prove the structure could not decide, which is why that assert stays in the script.
+
+**J comes from FR4**, which is short (`FGKGTKLSVIP`, `FGPGTRLTVT`) but distinctive. In the one
+engineered panel seen here, affinity maturation rewrote the junction and left FR4 untouched. That
+is an observation about Immunocore's panel, not a law: a framework-engineered, murinised or
+J-swapped construct would break it, and the thing to check is that FR4 still *matches a germline J
+exactly* before resting an inheritance argument on it.
 
 **Write the gene, not the allele**, unless a source states the allele. The top two alleles often
 differ by one residue on an engineered chain, which is not a basis for choosing between them.
@@ -382,15 +478,15 @@ precision follows the source, per `docs/schema.md`.
 
 **An engineered receptor does not corroborate its own J.** Where the maturation reached into the
 J-derived end of CDR3, each variant's match drops far enough to stop distinguishing neighbouring
-genes. Establish the call on the unmutated parent and assert that every variant still carries the
-parent's FR4 *exactly* — that is the real evidence for inheritance. Restating the weaker
-per-variant match would dress an inherited call up as an independent one.
+genes — 12/21 and 10/15 on Han's variants, against 20/21 and 13/15 on the parent. Establish the
+call on the unmutated parent and assert that every variant still carries the parent's FR4
+*exactly*; that is the real evidence for inheritance. Restating the weaker per-variant match would
+dress an inherited call up as an independent one.
 
 **Expect the audit to call these `unverifiable`, and leave them that way.** A gene call is an
 assignment about a sequence, not a string quoted from a file; having the IMGT reference in `raw/`
-proves the gene exists, not that this chain is it. `unverifiable` is the honest verdict and the
-provenance string should carry the numbers — which gene, how many residues, and what the next
-gene scored — so a reader can judge the call without redoing it.
+proves the gene exists, not that this chain is it. `unverifiable` is the honest verdict, and the
+provenance string should carry the numbers so a reader can judge the call without redoing it.
 
 **A format the audit cannot read is worse than a missing file.** When `audit.py` gained an
 R-deposit reader, a conversion bug made it return its own error message as the file's "text"; the

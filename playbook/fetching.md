@@ -188,7 +188,7 @@ So: **the inventory is free and reliable; the bytes are not.** A screen should j
 inventory and defer downloading, and a gated file becomes a precise request to the user — name,
 source URL, destination path, and what it unblocks.
 
-## 24. IGNORE — GEO accession pages are behind a reCAPTCHA
+## 24. GEO: the accession page is gated, the FTP mirror is not
 
 `https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=<GSE>` does not serve the accession page to a
 script. It answers **HTTP 200** with a Google reCAPTCHA challenge page -- `recaptcha-boq-challengepage`
@@ -196,11 +196,39 @@ in the body, no supplementary file list anywhere in it. Like the PMC proof-of-wo
 is a bot check rather than a permissions problem, **it must not be worked around**, and the same
 page opens normally in a browser.
 
-This matters because a data-availability statement naming a GEO accession reads like a cheap
-check and is not one. Treat a GEO accession as a human item from the start: name the accession
-and what it would settle, and let someone open it.
+**But the gate is only on `acc.cgi`.** NCBI serves the same supplementary files over an FTP
+mirror that answers a plain `curl`, and that is the route to use:
 
-Two things that do still work from a script, and are worth trying first:
+```
+https://ftp.ncbi.nlm.nih.gov/geo/series/<GSEnnn>/<GSE>/suppl/              # series files
+https://ftp.ncbi.nlm.nih.gov/geo/samples/<GSMnnn>/<GSM>/suppl/             # per-sample files
+```
+
+`<GSEnnn>` is the accession with its **last three digits replaced by `nnn`** — `GSE332840` lives
+under `GSE332nnn`, `GSM9032692` under `GSM9032nnn`. Fetch the **filelist** manifest in that same directory first; it is cheap, and it tells you the
+sizes before you commit to a download.
+
+**The file to want is the per-sample *filtered contig annotations* table**, 10x's V(D)J output. Its columns are
+`barcode, chain, v_gene, d_gene, j_gene, cdr3, cdr3_nt, productive, raw_clonotype_id` — which is
+every mandatory gene column, per cell, already called. That is **§28 branch 1**: a stated gene,
+not one you have to derive, so the margin test and the refusal rule never come into it.
+
+**One trap, and it costs a 404:** only `GSE*`-prefixed files live under the *series* path. A
+`GSM*`-prefixed file is under `samples/`, and asking the series path for it returns HTTP 404 with
+a ~990-byte XML error body — which is a wrong-type response, not an empty file, so check the bytes
+(§13) and delete the stub.
+
+Measured 2026-10-07, screening J01 wave 2: three papers whose decisive files this section had
+classified as human items came back to a script in one pass. **Two of them were parked papers that
+became PASSes** — Ghoreyshi 42337259 (GSE332840 contigs supplied the V/J/CDR3 its GitHub deposit
+lacked) and DiLisio 41872174 (GSE299087 contigs gave `TRAV16N/TRAJ42 CAMRDSGGSNAKLTF` and
+`TRBV13-3/TRBJ2-4 CASSDSQNTLYF`) — and the third, Malone 41407706, had its only blocker removed by
+that series' **ND580/ND602 TCR-combined workbooks**, paired
+TRAV/TRAJ/TRA_CDR3 + TRBV/TRBJ/TRB_CDR3 per cell.
+**A GEO accession is a cheap check after all. Do not put one on `NEEDS_HUMAN.md` without trying
+the mirror.**
+
+Two more routes that work from a script:
 
 - **Zenodo's REST API is open** and gives the file list without any challenge:
   ```
