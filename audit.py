@@ -137,6 +137,25 @@ def read_any(path):
                         with z.open(n) as fh:
                             out.append(fh.read().decode("utf-8", "replace"))
             return "\n".join(out)
+        if ext in ("rdata", "rds"):
+            # R-serialised deposits are machine-readable data, not a format to shrug at: one
+            # paper's entire TCR table arrives this way. pyreadr is optional -- without it this
+            # returns '' and those fields fall through to unverifiable, which is honest.
+            try:
+                import pyreadr
+            except ImportError:
+                return ""
+            out = []
+            for name, frame in pyreadr.read_r(path).items():
+                out.append(str(name))
+                out.extend(str(c) for c in frame.columns)
+                # str() per cell, not .astype(str): an R frame mixes types freely, and a column
+                # that will not convert wholesale used to leave a float in the list and raise
+                # inside join() -- which the outer handler turned into a 69-byte "<<unreadable>>"
+                # string. That indexed as a readable-but-empty file, so every value really in
+                # this deposit was reported CONTRADICTED rather than merely unverified.
+                out.extend(str(c) for c in frame.to_numpy().ravel())
+            return "\n".join(out)
         if ext == "pdf":
             from pypdf import PdfReader   # guaranteed present; checked at startup
             return "\n".join((p.extract_text() or "") for p in PdfReader(path).pages)
@@ -235,7 +254,11 @@ def found_in(idx, value, field=None):
 
 
 # ------------------------------------------------------- what does a source point at?
-FIG = re.compile(r"(?i)\b(?:fig\.?|figure|extended data fig\.?)\s*(s?\d+[a-z]?)")
+# The trailing (?!_) keeps a FILENAME from reading as a figure citation. A deposit member
+# called `figure4_output_metadata.RData` is a machine-readable file, and treating it as
+# "figure 4, no image stored" sent 62 rows of one paper to unverifiable under a reason
+# that was not true of them. No real citation ends its number with an underscore.
+FIG = re.compile(r"(?i)\b(?:fig\.?|figure|extended data fig\.?)\s*(s?\d+[a-z]?)(?!_)")
 EXT = re.compile(r"(?i)\b(PDB|RCSB|VDJdb|GenBank|IEDB|IMGT|UniProt|PMID|doi)\b")
 # "reused from paper <ID>" -- a legitimate cross-paper citation; audit it against THAT
 # paper's raw/. The number is whatever local ID that paper carries in this workspace.

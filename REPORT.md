@@ -35,6 +35,7 @@ exactly one place.
 | 25 | One deposit, several datasets — answer the question you asked | `playbook/fetching.md` | a deposit or archive is the blocker |
 | 26 | A data-quality flag encoded as text colour | `playbook/judgement.md` | parsing a table out of a PDF |
 | 27 | An epitope cited by position, never printed | `playbook/fetching.md` | the antigen is a range, not a sequence |
+| 28 | The V and J genes are not in the paper | `playbook/judgement.md` | a mandatory gene column has no stated value |
 | — | Decisions that recur | `playbook/judgement.md` | **every extraction** |
 | — | The checks, as runnable assertions (C1–C12) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |

@@ -339,3 +339,61 @@ Resolve these per paper and record the choice in `source_notes`:
    another file's formatting.
 4. **Combined training files** that re-list TCRs already present individually must be
    excluded from the pool, or those receptors are double-counted.
+
+## 28. The V and J genes are not in the paper
+
+Three papers in one batch printed CDR3s, or deposited chains, and no IMGT gene call anywhere:
+a patent-sourced panel, a structural paper with zero `TRAV`/`TRBV` strings in its full text, and
+a mechanism paper that named its V genes but not its J genes and cited another paper for the rest.
+`Va`, `Ja`, `Vb` and `Jb` are mandatory, so "not stated" is not an answer.
+
+**Look for a stated gene before assigning one.** In order of how much it is worth:
+
+| Where | What it gives |
+|---|---|
+| the paper's Methods | occasionally the whole call, with alleles — take it |
+| a **patent's prose**, not its sequence listing | "FR1, FR2 and FR3 … corresponding to a TRAV 26-2 chain … those of a TRBV19 chain". The listing has only sequences; the description names the genes |
+| the **cited** paper | often repeats the same gap — check, do not assume |
+| the cited paper's **structures** | the end of the chase. A PDB entry carries whole chains |
+| RCSB entity names | `T cell receptor beta variable 6-5` is an annotation, not evidence. Useful as a cross-check on your own call, never as the source |
+
+**Assigning it: match against the IMGT reference, which is one ungated download.**
+
+```
+https://www.imgt.org/download/GENE-DB/IMGTGENEDB-ReferenceSequences.fasta-AA-WithoutGaps-F+ORF+inframeP
+```
+
+Two things about the matching, both learned the hard way:
+
+- **Do not anchor at position 0.** A crystallised construct begins `MAKEVEQ…` where the germline
+  begins `KNEVEQ…`, and a prefix match then scores the *correct* gene at 1/92. Score the best
+  ungapped offset instead. With the offset, the same chain scores 87/92.
+- **Require the margin over the best OTHER GENE, not the runner-up.** The runner-up is almost
+  always a second allele of the same gene — `TRBJ2-7*02` differs from `*01` by one residue — so a
+  plain runner-up test rejects calls that are not ambiguous at all.
+
+**J comes from FR4**, which is short (`FGKGTKLSVIP`, `FGPGTRLTVT`) but distinctive, and which
+affinity maturation leaves alone even when it rewrites the junction.
+
+**Write the gene, not the allele**, unless a source states the allele. The top two alleles often
+differ by one residue on an engineered chain, which is not a basis for choosing between them.
+Mixing a stated `TRAV19*01` with a derived `TRAJ28` in one row looks inconsistent and is correct:
+precision follows the source, per `docs/schema.md`.
+
+**An engineered receptor does not corroborate its own J.** Where the maturation reached into the
+J-derived end of CDR3, each variant's match drops far enough to stop distinguishing neighbouring
+genes. Establish the call on the unmutated parent and assert that every variant still carries the
+parent's FR4 *exactly* — that is the real evidence for inheritance. Restating the weaker
+per-variant match would dress an inherited call up as an independent one.
+
+**Expect the audit to call these `unverifiable`, and leave them that way.** A gene call is an
+assignment about a sequence, not a string quoted from a file; having the IMGT reference in `raw/`
+proves the gene exists, not that this chain is it. `unverifiable` is the honest verdict and the
+provenance string should carry the numbers — which gene, how many residues, and what the next
+gene scored — so a reader can judge the call without redoing it.
+
+**A format the audit cannot read is worse than a missing file.** When `audit.py` gained an
+R-deposit reader, a conversion bug made it return its own error message as the file's "text"; the
+file then indexed as readable-but-empty and 53 fields that really were in it were reported
+**contradicted** rather than unverified. A reader that half-works inverts the audit's most serious
+verdict, so check a new one by asking whether a value you know is in the file comes back.
