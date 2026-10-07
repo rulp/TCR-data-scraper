@@ -249,3 +249,61 @@ What to do instead:
   later; a negative never gets checked again.
 - Do not assume one format per deposit. The usable half here was `.RData`, readable with
   `pyreadr` and invisible to any CSV-oriented scan.
+
+## 27. An epitope cited by position, never printed — go to the cited paper's SUPPLEMENT
+
+A paper names its antigen as a range — "Sepsecs 187-197", "GAD65 377-396" — and cites an earlier
+paper for the sequence. The range is useless without the frame it is counted in, and that frame
+is almost never stated.
+
+**Do not resolve it from a sequence database.** It looks like a one-minute lookup and it is a
+trap: the same protein has several reference records of different lengths, each shifting the
+numbering, and they disagree silently. One case gave three records, three different answers for
+the same range, and no way to tell which the authors used:
+
+| record | length | residues 187-197 |
+|---|---|---|
+| UniProt, current version | 501 | `VVIENVLEGDE` |
+| UniProt, earlier version | 441 | `IPHIVNNAYGV` |
+| GenBank, the autoantigen entry | 422 | `IQQGARVGRID` |
+
+Picking one writes a wrong `Antigen` into **every row at once**, and it is the error class the
+audit structurally cannot catch — the audit checks the value against the locator note, and the
+note would carry the same wrong value.
+
+**Fetch the cited paper's supplement, not its main text.** This inverts the usual order and it is
+the point of the section. The main text would only repeat the position; what defines the frame —
+the peptide library, the construct map, the mutagenesis table — is in the supplement. The
+supplement is also the half more likely to be reachable: publisher supplementary files are often
+ungated on the CDN while the article itself sits behind a paywall, so the paper you "cannot get"
+may hand over exactly the file you need. A paywalled J Hepatol article whose main text was
+confirmed absent from PMC and Europe PMC still yielded its supplement in one download.
+
+**Then reconstruct the frame rather than assuming it.** An overlapping-peptide library is a
+self-checking artifact: reassemble every peptide at its stated position and require that the
+overlaps agree.
+
+```python
+seq, conflicts = {}, []
+for s, start in peptides:                     # 20-mers, stated aa position
+    for i, ch in enumerate(s):
+        pos = start + i
+        if seq.get(pos, ch) != ch:
+            conflicts.append((pos, seq[pos], ch))
+        seq[pos] = ch
+assert not conflicts, conflicts
+assert sorted(seq) == list(range(min(seq), max(seq) + 1)), "gaps in the tiling"
+print(len(seq), "".join(seq[i] for i in sorted(seq)))
+```
+
+53 peptides agreeing across 52 joins with no gap can only be tiling one sequence, and the numbers
+printed beside them are the authors' own frame — which is what a database lookup can never tell
+you. Two sequences previously proposed for that epitope turned out to sit 70 and 100 residues
+away, and one of them belonged to a *different* epitope with different clones.
+
+**Expect the citing paper to contradict itself, and read the figure caption.** The same tetramer
+was called "187-197" in Results and Methods and "185-197" in the Fig. 4A caption. Prefer the
+caption of the figure that **defines the population the rows come from** — it is written against
+the actual reagent — and check both candidates against **C3** before choosing: a nested pair can
+straddle the class-II floor, where one passes and the other does not. Record both labels in
+`source_notes`, and attribute `Antigen` to the cited paper with `origin = external`.
