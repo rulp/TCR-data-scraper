@@ -32,11 +32,12 @@ exactly one place.
 | 22 | Peptides in the paper that are not the paper's peptides | `playbook/judgement.md` | **every extraction**; screening |
 | 23 | A receptor whose binding does not depend on the peptide | `playbook/judgement.md` | SPR/structure with no activation |
 | 24 | IGNORE — GEO accession pages behind a reCAPTCHA | `playbook/fetching.md` | checking a GSE/GSM from a script |
+| 25 | One deposit, several datasets — answer the question you asked | `playbook/fetching.md` | a deposit or archive is the blocker |
 | — | Decisions that recur | `playbook/judgement.md` | **every extraction** |
 | — | The checks, as runnable assertions (C1–C12) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |
 
-**§1–§10 and §13–§23 are solved or have a stated workaround** — reuse the method. **§11, §12 and
+**§1–§10, §13–§23 and §25 are solved or have a stated workaround** — reuse the method. **§11, §12 and
 §24 are marked IGNORE**: they cannot be resolved without a human, so do not burn time
 re-attempting them.
 

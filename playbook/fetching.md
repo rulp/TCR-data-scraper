@@ -221,3 +221,31 @@ Two things that do still work from a script, and are worth trying first:
   28 KB, 154 rows with paired CDR3/V/J, epitope and MHC, and it turned a PARK into a PASS for one
   GET (Sturmlechner 2025, PMID 40640147). When a paper
   says its sequences went to VDJdb, this is the route -- not the VDJdb web UI.
+
+## 25. One deposit, several datasets -- answer the question you actually asked
+
+A park or a blocker names a question ("does the deposit carry per-cell CDR3/V/J **with the
+tetramer labels**?"). A deposit then hands back a dozen files. The failure mode is to open the
+first file that looks like the answer, find it convincing, and never notice it belongs to a
+different experiment.
+
+Observed on Cardon 2025 (PMID 39880819), Zenodo record 14551359. `figure2_input_metadata.csv` has
+paired CDR3/V/J for 2,768 cells and an `Ag_reactivity` column -- it looks exactly like the answer.
+It is the **peptide-stimulation** experiment, and its labels are protein names, so the honest
+conclusion from that file is "no usable antigen". The tetramer experiment was
+`figure4_output_metadata.RData`, a different file for a different figure, holding 31 clonotypes
+against one defined epitope. **The paper was failed on the strength of the wrong file and had to
+be reinstated.**
+
+What to do instead:
+
+- **Name the figure, not just the file.** A deposit is usually organised by figure
+  (`figure2_*`, `figure4_*`). Find which figure the question is about -- the Results paragraph
+  that describes the experiment says so -- and read that figure's files first.
+- **Enumerate the whole archive before concluding anything**, including files you do not plan to
+  open. 14 names is cheap to scan; it is how you notice `figure4_` exists at all.
+- **A negative answer is the one to double-check.** "This deposit has nothing usable" ends a
+  paper, so it needs the same evidence a positive would. A positive gets checked by the audit
+  later; a negative never gets checked again.
+- Do not assume one format per deposit. The usable half here was `.RData`, readable with
+  `pyreadr` and invisible to any CSV-oriented scan.

@@ -31,8 +31,11 @@ SKIP_RE = re.compile(r"^(J\d\d_|\d{3}_|_control$|audit$)")
 PATH = re.compile(r"`([A-Za-z0-9_][A-Za-z0-9_./-]*\.(?:md|py|txt|tsv|csv|xlsx|json|sh))`")
 # Placeholders stand for a family of files, not one file.
 PLACEHOLDER = re.compile(r"<|\*|\bN\b")
-# Named as examples of a problem, not as files of ours.
-EXEMPT = {"inspect.py", "csv.py"}
+# Named as examples of a problem, not as files of ours. The second group are member files
+# inside a third-party DATA DEPOSIT (Zenodo, GEO), cited by name in the playbook because the
+# lesson is about which member to open -- naming them generically would lose the lesson.
+EXEMPT = {"inspect.py", "csv.py",
+          "figure2_input_metadata.csv", "figure4_output_metadata.RData"}
 # A PUBLISHER's supplementary file. These are named on purpose and will never be repo paths:
 # a procedure that shows what a fetch request looks like has to name a real one, or the
 # example teaches a shape nobody can copy. Covers Springer/Nature MOESM, Elsevier mmc, and

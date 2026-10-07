@@ -126,9 +126,15 @@ antigen column the schema wants. It is not: the cells were selected against a wh
 pool, so the label is the *assay*, not the epitope. **Attributing them to a named epitope the
 paper cites elsewhere is fabrication**, even when the paper discusses exactly one epitope -- it
 turns one citation into as many rows as there are cells. If no per-cell epitope mapping is
-published, the paper FAILs here no matter how good the TCR side is.
-*Observed: Cardon 2025 (PMID 39880819) -- 725 clean paired clonotypes, zero usable antigens;
-tempting to assign all 305 SLA-reactive ones to Sepsecs187-197, which the paper never does.*
+published **for that dataset**, those rows fail here no matter how good their TCR side is.
+*Observed: Cardon 2025 (PMID 39880819) -- its Figure 2 experiment has 725 clean paired clonotypes
+and not one usable antigen; assigning the 305 SLA-reactive ones to Sepsecs187-197 would be an
+inference the paper never makes.*
+
+**But scope the verdict to the dataset, not the paper** -- see fetching.md 25. The same deposit's
+Figure 4 is a tetramer sort on a single defined epitope and yields 31 perfectly good rows. A paper
+can carry a protein-label dataset and an epitope-defined one side by side, and failing the whole
+paper on the first one you open throws the second away.
 
 ## 15. Papers that state no hit threshold at all
 
