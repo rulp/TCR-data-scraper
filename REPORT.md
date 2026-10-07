@@ -29,11 +29,13 @@ exactly one place.
 | 19 | Resolving a PMID; what the PMC APIs give you | `playbook/fetching.md` | screening, or acquiring from PMC |
 | 20 | One receptor, several papers, several names | `playbook/judgement.md` | **every extraction** |
 | 21 | A paper with no T cell receptor in it at all | `playbook/judgement.md` | a screen card flags no TCR evidence |
+| 22 | Peptides in the paper that are not the paper's peptides | `playbook/judgement.md` | **every extraction**; screening |
+| 23 | A receptor whose binding does not depend on the peptide | `playbook/judgement.md` | SPR/structure with no activation |
 | — | Decisions that recur | `playbook/judgement.md` | **every extraction** |
 | — | The checks, as runnable assertions (C1–C12) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |
 
-**§1–§10 and §13–§21 are solved or have a stated workaround** — reuse the method. **§11–§12 are
+**§1–§10 and §13–§23 are solved or have a stated workaround** — reuse the method. **§11–§12 are
 marked IGNORE**: they cannot be resolved without a human, so do not burn time re-attempting them.
 
 `playbook/judgement.md` is mandatory for every extraction and holds the *reasoning*;

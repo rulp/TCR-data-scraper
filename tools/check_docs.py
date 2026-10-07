@@ -19,6 +19,12 @@ ROOT = os.path.dirname(HERE)
 # our own generator's work twice.
 SKIP_DIRS = {".git", "raw", "__pycache__", ".venv", "venv", "node_modules",
              ".agents", ".claude", ".cursor", ".codex"}
+# The gitignored WORKSPACE, for the same reason `raw` is skipped: its documents name files
+# that belong to a publisher, not to us. A locator note cites
+# `41467_2024_47576_MOESM7_ESM.xlsx` precisely because that file is NOT here yet -- naming it
+# is the note's whole job. This guard exists to stop AGENTS.md's routing rotting, and the
+# routing is all in tracked files.
+SKIP_RE = re.compile(r"^(J\d\d_|\d{3}_|_control$|audit$)")
 
 # A repo path inside backticks: `playbook/checks.md`, `audit.py`, `lib/provenance.py`.
 # Anchored on a known extension so prose like `clean` or `--papers` is not mistaken for one.
@@ -42,9 +48,13 @@ RUNTIME = re.compile(r"^(paper_source\.md|AUDIT(_partial)?\.md|candidates\.tsv|s
                      r"|screened\.md|NEEDS_HUMAN\.md|clean_\w+\.(xlsx|csv)|SKILL\.md)$")
 
 
+def _keep(d):
+    return d not in SKIP_DIRS and not SKIP_RE.match(d)
+
+
 def walk():
     for base, dirs, names in os.walk(ROOT):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        dirs[:] = [d for d in dirs if _keep(d)]
         for n in names:
             if n.endswith((".md", ".py")):
                 yield os.path.join(base, n)
@@ -86,7 +96,7 @@ def main():
     # per paper. Accept any basename that exists somewhere in the repo.
     basenames = {os.path.basename(f) for f in walk()}
     for base, dirs, names in os.walk(ROOT):
-        dirs[:] = [d for d in dirs if d not in SKIP_DIRS]
+        dirs[:] = [d for d in dirs if _keep(d)]
         basenames.update(names)
 
     for f in walk():

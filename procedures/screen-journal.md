@@ -86,7 +86,18 @@ Three traps the cards are built to expose:
   correctly dropped (`judgement.md` §21),
   because 1G4 appears only as a structural benchmark. **Decide which, and say so in the locator.**
 - **`peptide-like tokens`** is the weakest signal on the card. It is regex over body text against a
-  stoplist, and English leaks through. Never pass a paper on that number alone.
+  stoplist, and English leaks through. Never pass a paper on that number alone. Confirmed false
+  positives, all from one J01 wave: **CDR3 strings** (`CSARAGYGYTF`, `CAVREGTG`) -- which are pure
+  amino-acid 8-11mers and can never be stoplisted away; CDR1/CDR2 fragments; the canonical 10x
+  dextramer panel quoted in prose; software names (`ICERFIRE`); and reagent brands (`AMERSHAM`,
+  `STELLARIS`, `STEMCELL`). **A high `TRAV/TRBV` count is the same trap**: it is often a Methods
+  primer list, an encoder's allele vocabulary, or a flow-gating label (`TRAV1-2` for MAIT), not
+  per-clone calls. Check what the tokens actually are.
+- **Check the PMC XML for `<table-wrap>` before concluding data is unreachable.** Main tables are
+  often printed in full in the cached XML, which can make a paper extractable with no download at
+  all -- Croce 2024 (PMID 38615042) yields all ten columns that way.
+- **The four FAIL classes gate B cannot see** are `playbook/judgement.md` **§22**. Half of the
+  first J01 wave failed on them while scoring `likely`. Read it before a wave.
 - **A screen's library unit is usually not an epitope** (`playbook/judgement.md` §14). A paper
   tiling the proteome in 56-mers still has to name its validated pairs somewhere.
 

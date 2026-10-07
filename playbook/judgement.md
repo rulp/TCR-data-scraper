@@ -225,6 +225,49 @@ them: a paper whose *subject* is a named TCR passes; a paper that only *cites* o
 *Observed: Householder 2025, PMID 40705894 — a designed four-helix minibinder against
 NY-ESO-1/A\*02:01 (PDB 9MIN, five entities, none a TCR chain), naming 1G4 only as a comparator.*
 
+## 22. The paper contains peptides; that does not make them the paper's peptides
+
+The hard gate is that **peptides come from the paper**. Half of one 20-paper wave failed it while
+showing strong peptide signals, in four classes. Recognising them early is the difference between
+a two-minute read and a 150-300k-token extraction that yields nothing.
+
+- **Computational re-analysis.** Every peptide and TCR record is a download -- IEDB, VDJdb,
+  CEDAR, the 10x dextramer panel, a prior paper's supplement. Tell: Methods has no wet-lab
+  section at all, only "Preparation of the ... dataset" paragraphs.
+- **Specificity assigned by database matching.** Subtler, and it passes a naive check: the paper
+  sequences its own receptors, then labels them by matching CDR3s against VDJdb/IEDB. The TCRs
+  are real and the peptides are real, but the *pairing* is a lookup. Extracting it re-imports
+  database rows under a new PMID -- the cross-source double-count the provenance CSV exists to
+  prevent.
+- **Non-peptidic antigen.** MAIT/MR1 with riboflavin metabolites (5-OP-RU, Ac-6-FP), or CD1 with
+  lipids. MR1 and CD1 are monomorphic, so `MHC` has no allele and `Antigen` has no sequence. The
+  schema structurally cannot hold these.
+- **Antigen-agnostic repertoire.** Bulk or single-cell TCR against a whole protein, a PPD, a
+  pathogen lysate or whole cells. The paper usually says outright that the epitopes are unknown.
+
+All four are **FAIL**, not PARK: no amount of fetching produces the missing column. The binder
+that is not a TCR at all is the fifth class and has its own section, **§21**.
+*Observed: Drost 2024, Foster 2026, Kain 2026, Walkenhorst 2024, Turner 2026, Perriot 2025,
+Keller 2024, Lee 2026 and Nielsen 2025 -- all Nat Commun, one wave.*
+
+## 23. A receptor whose binding does not depend on the peptide
+
+A TCR can bind pMHC with real, measured affinity while the peptide contributes nothing to the
+specificity -- it contacts the MHC helices only, and does not activate T cells. The SPR numbers
+are genuine, so every automatic check passes, and the rows look exactly like positives.
+
+They are not. A specificity model trained on them learns that this receptor binds those peptides,
+when what the paper demonstrated is the opposite: that it binds *regardless of* them.
+
+**This is a decision to take before extracting, not during.** Two defensible answers -- exclude
+the paper, or ship the rows in a companion CSV with an explicit outcome column saying the binding
+is peptide-independent -- and one wrong one, which is to let them into the `clean` sheet unmarked.
+Say which was chosen in `source_notes`, and say why.
+
+The tell is in the paper's own framing: a structure paper reporting that the TCR "does not contact
+the peptide", paired with a functional figure showing no CD69 or no cytokine.
+*Observed: Lim 2025 (PMID 40199885), the G9 TCR on HLA-DQ2.5/DQ2.2.*
+
 ## Decisions that recur
 
 Resolve these per paper and record the choice in `source_notes`:
