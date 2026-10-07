@@ -33,6 +33,11 @@ PATH = re.compile(r"`([A-Za-z0-9_][A-Za-z0-9_./-]*\.(?:md|py|txt|tsv|csv|xlsx|js
 PLACEHOLDER = re.compile(r"<|\*|\bN\b")
 # Named as examples of a problem, not as files of ours.
 EXEMPT = {"inspect.py", "csv.py"}
+# A PUBLISHER's supplementary file. These are named on purpose and will never be repo paths:
+# a procedure that shows what a fetch request looks like has to name a real one, or the
+# example teaches a shape nobody can copy. Covers Springer/Nature MOESM, Elsevier mmc, and
+# PMC author-manuscript supplements.
+SUPP_FILE = re.compile(r"(?:_MOESM\d+_ESM|^mmc\d+|^1-s2\.0-|^NIHMS\d+-)", re.I)
 
 # Paper IDs are assigned PER MACHINE and start at 001 on each, so a concrete one in a
 # tracked file is meaningless to anyone else and goes stale the moment the workspace
@@ -107,6 +112,8 @@ def main():
             continue                      # this file names the patterns it looks for
 
         for cited in set(PATH.findall(text)):
+            if SUPP_FILE.search(cited):
+                continue
             if PLACEHOLDER.search(cited) or cited.startswith(("http", "~")):
                 continue
             if cited in EXEMPT:

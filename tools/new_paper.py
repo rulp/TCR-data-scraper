@@ -7,7 +7,7 @@ nothing performed it, so the never-renumber/never-reuse invariant was maintained
 This does it in one step, moves across any files already fetched into the journal's
 `incoming/<PMID>/` staging directory, and closes out that paper's entries in the journal's
 `NEEDS_HUMAN.md` so the shopping list drains as papers are extracted instead of growing
-forever.
+forever -- leaving that file a list of what is still to do.
 
     python3 tools/new_paper.py --pmid 38684663 --from J01
     python3 tools/new_paper.py --pmid 41058174 --author Jones --year 2026 --journal "Mol Ther"
@@ -94,17 +94,31 @@ def from_candidates(jid, pmid):
     return "", "", ""
 
 
+#: A NEEDS_HUMAN entry heading. Level 2 or 3, and the PMID may sit anywhere in it --
+#: the readable format leads with a checkbox and the author ("### [ ] 1 - Han 2026 - PMID
+#: 42288475"), while older files lead with the PMID. Matching loosely settles both.
+HEAD = r"(?m)^(?=###? )"
+
+
+def _is_entry(head, pmid):
+    return re.search(r"\b%s\b" % pmid, head) is not None
+
+
+def _is_done(head):
+    return head.startswith("## Done") or head.startswith("## Fulfilled")
+
+
 def close_requests(jdir, pmid, raw, rel_raw):
-    """Settle this paper's blocks in the journal's NEEDS_HUMAN.md.
+    """Settle this paper's entries in the journal's NEEDS_HUMAN.md.
 
     A request dies when its file lands in the paper's raw/, not when the paper is taken into
-    a batch -- so each block is judged on whether any file it names is actually there now.
-    Fulfilled blocks collapse to one line under `## Fulfilled`; the rest survive, with their
+    a batch -- so each entry is judged on whether any file it names is actually there now.
+    Settled entries collapse to one line under `## Done`; the rest survive, with their
     destination rewritten from the staging directory to the paper's own raw/, which exists
     from this moment and is where the file should now go.
 
     Returns (n_closed_now, n_retargeted). The count is of requests closed by THIS call --
-    lines already under `## Fulfilled` are carried across, not counted again.
+    lines already under `## Done` are carried across, not counted again.
     """
     path = os.path.join(jdir, "NEEDS_HUMAN.md")
     if not os.path.exists(path):
@@ -112,15 +126,15 @@ def close_requests(jdir, pmid, raw, rel_raw):
     text = open(path, encoding="utf-8").read()
     have = {f.lower() for f in os.listdir(raw)} if os.path.isdir(raw) else set()
 
-    # Split on level-2 headings, keeping each heading with its body.
-    parts = re.split(r"(?m)^(?=## )", text)
+    # Split on headings, keeping each heading with its body.
+    parts = re.split(HEAD, text)
     keep, done, closed_now = [], [], 0
     for part in parts:
         head = part.split("\n", 1)[0]
-        if not re.match(r"##\s*%s\b" % pmid, head):
-            if not head.startswith("## Fulfilled"):
+        if not _is_entry(head, pmid):
+            if not _is_done(head):
                 keep.append(part)
-            else:                       # absorb an existing Fulfilled list, re-emitted below
+            else:                       # absorb an existing Done list, re-emitted below
                 done.extend(l for l in part.split("\n")[1:] if l.startswith("- "))
             continue
         named = [m.group(0) for m in re.finditer(SUPP, part)]
@@ -131,19 +145,21 @@ def close_requests(jdir, pmid, raw, rel_raw):
                                             head.lstrip("# ").strip(), ", ".join(sorted(set(got)))))
         else:
             # Still outstanding, but the destination has changed now that an ID exists.
+            # Both spellings: the readable "**Save to** `...`" and the older "- put it in:".
+            part = re.sub(r"(?m)^\*\*Save to\*\* .*$",
+                          "**Save to** `%s/`" % rel_raw, part)
             part = re.sub(r"(?m)^- put it in: .*$",
                           "- put it in: `%s/`" % rel_raw, part)
             keep.append(part)
 
     out = "".join(keep).rstrip("\n") + "\n"
     if done:
-        out += ("\n## Fulfilled\n\n"
+        out += ("\n## Done\n\n"
                 "Closed automatically by `tools/new_paper.py` when the file reached the paper's\n"
                 "`raw/`. Kept as one line each so the list above stays the outstanding work.\n\n"
                 + "\n".join(done) + "\n")
     open(path, "w", encoding="utf-8").write(out)
-    return closed_now, sum(1 for k in keep
-                           if re.match(r"##\s*%s\b" % pmid, k.split("\n", 1)[0]))
+    return closed_now, sum(1 for k in keep if _is_entry(k.split("\n", 1)[0], pmid))
 
 
 def label(author):

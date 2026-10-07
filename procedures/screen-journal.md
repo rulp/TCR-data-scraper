@@ -1,13 +1,14 @@
 ---
 name: screen-journal
-description: Screen one journal's papers for extractable TCR-pMHC data and write the per-journal list. Runs the mechanical probe, then a model screen in waves, producing a locator note per passing paper that extract-paper consumes. Use when given a J## journal id, "screen journal X", or "what should we extract next". Do NOT use when handed a specific PMID to extract; that is extract-paper.
+description: Screen one journal's papers for extractable TCR-pMHC data and write the per-journal list. Runs the mechanical probe, then a model screen in waves, producing a locator note per passing paper that extract-paper consumes, then fetching every blocked file it can so only the genuinely gated ones reach a human. Use when given a J## journal id, "screen journal X", or "what should we extract next". Do NOT use when handed a specific PMID to extract; that is extract-paper.
 ---
 
 # Screening one journal
 
 You are deciding which papers in **one journal** could yield a `clean_<ID>.xlsx`, and recording
-*where the data is* so extraction never has to rediscover it. You are **not** extracting, and you
-are **not** downloading supplementary files.
+*where the data is* so extraction never has to rediscover it. You are **not** extracting, and
+while you are screening you are **not** downloading supplementary files -- step 6 does that at the
+end, and only for papers that passed.
 
 `journals/journals.md` holds the journal list and the rules that govern it. `docs/schema.md` is
 the output contract these papers must be able to fill — the locator you write below is keyed to
@@ -164,22 +165,68 @@ is indistinguishable from a paper never reached — which also makes the funnel 
 
 ### 3. `NEEDS_HUMAN.md` — the shopping list
 
-Anything you cannot fetch. One block per file, precise enough to action without rereading the paper:
+Everything still missing after step 6 has tried. **This file is read by a person, so the thing
+to DO comes first and the reasoning second.** Three parts, in this order: a count, a `## TODO`
+list of outstanding items, and `## Done` plus `## Needs nothing` below it where settled work goes
+to stop cluttering the list.
 
 ```markdown
-## 38016469 Dezfulian -- NIHMS1947859-supplement-6.pdf
-- why: holds Fig. S6F/S6G, the only place the minimal epitopes appear
-- try: https://pmc.ncbi.nlm.nih.gov/articles/PMC10841602/  (supplementary list)
-- put it in: `journals/<J##>_*/incoming/38016469/`   (mkdir -p it)
-- blocks: Antigen and MHC columns -- without it the paper yields 4 rows instead of 6
+# J07 Immunity -- what needs a human
+
+**2 things to do.** Everything else was fetched automatically. Every "Save to" directory
+already exists -- drop the file in and you are done.
+
+## TODO
+
+### [ ] 1 · Dezfulian 2023 · PMID 38016469
+
+**Open** https://pmc.ncbi.nlm.nih.gov/articles/PMC10841602/
+**Click** `NIHMS1947859-supplement-6.pdf`  (Supplementary Figure S6)
+**Save to** `journals/<J##>_*/incoming/38016469/`
+
+- **worth it?** 6 rows instead of 4 -- it is the only place the minimal epitopes appear
+- **why a human:** author manuscript, so the PMC proof-of-work gate applies (§13) and there is
+  no publisher CDN route
 ```
+
+Three bold lines, in the order a person acts in: where to go, what to click, where to put it.
+Give the **full article URL**, never a template to assemble. One `###` entry per file, numbered;
+the numbers are a reading aid, so a gap left by a finished item is fine.
+
+**Why "Open / Click" and not a `curl` line.** By the time an entry survives step 6, scripted
+fetching has already failed on it -- a command to paste is precisely the thing that will not work.
+Clicking the file in a browser is the action that does.
+
+**`why a human` is not optional.** It tells the reader the trip is not wasted, and it stops the
+next screen re-listing a file that step 6 could in fact have fetched.
+
+**A parked paper gets an entry too**, with its stake written as a verdict rather than a column:
+
+```markdown
+### [ ] 2 · Han 2026 · PMID 42288475
+
+**Open** https://pmc.ncbi.nlm.nih.gov/articles/PMC13408770/
+**Click** `41467_2026_73396_MOESM8_ESM.xlsx`  (Source Data)
+**Save to** `journals/<J##>_*/incoming/42288475/`
+
+- **worth it?** decides the paper -- ~60 rows if it carries sequences, 0 if only plot values
+- **resolves:** PARK → PASS or FAIL
+```
+
+**A PARK whose resolution is "acquire something and look at it" belongs on this list.** That is
+the same shape as a blocked file and the same person resolves it. A PARK needing no artifact -- a
+judgement call, a question for the user -- stays in `screened.md` only. This matters most for the
+class the `## Do not` section forces to PARK: **`no PMC access` is the most human-resolvable
+verdict there is**, since the user has institutional access, and without an entry here it is the
+one verdict nobody ever acts on.
 
 **The destination is the staging directory, never a paper folder.** At screen time the paper has
 no `ID` yet — one is assigned only when it enters an extraction batch — so `<ID>_Dezfulian/raw/`
 names a path that does not exist and inventing a number would break the assign-on-append rule.
 `tools/new_paper.py` moves everything in `incoming/<PMID>/` into `raw/` at Step 0 of the
 extraction, so a file fetched today lands in the right place whenever that happens. Without a
-real destination this list cannot be worked in one sitting, which is its only purpose.
+real destination this list cannot be worked in one sitting, which is its only purpose. It is also
+where step 6 writes, so the directory has to exist before anything is fetched, not after.
 
 **Create the directory as you write the entry**, so the user never has to prepare anything
 before fetching:
@@ -189,11 +236,16 @@ mkdir -p journals/<J##>_*/incoming/<PMID>
 ```
 
 **The list drains itself.** `tools/new_paper.py` settles this paper's entries when it takes the
-paper into a batch: a request whose file has arrived in `raw/` collapses to one line under
-`## Fulfilled`, and one still outstanding keeps its block but has its destination rewritten to
-the paper's own `raw/`, which exists from that moment. So the file stays a list of work still to
-do, rather than growing by a wave every time the journal is screened. Append new entries; never
-hand-edit the `## Fulfilled` section.
+paper into a batch: a request whose file has arrived in `raw/` collapses to one dated line under
+`## Done`, and one still outstanding keeps its entry but has its destination rewritten to the
+paper's own `raw/`, which exists from that moment. So the file stays a list of work still to do,
+rather than growing by a wave every time the journal is screened. Append new entries; never
+hand-edit the `## Done` section.
+
+**One entry per file, even for the same paper.** An entry is settled when *any* file it names has
+arrived, so a still-needed file folded into an already-satisfied entry disappears without trace.
+When a fetched file answers one question and raises another -- a supplement that supplies the
+peptides but no V/J genes -- append a second entry rather than editing the first.
 
 The user has institutional access and can fetch these in one sitting. **State what the file
 unblocks**, so they can judge whether it is worth the trip. This is how
@@ -213,11 +265,57 @@ Claim it **before** you sweep, not after, and push that change: its whole purpos
 second computer starting the same journal. Touch only that row's cells, and never re-align the
 table — `journals/journals.md` has the rules and why they matter.
 
+### 6. Work the shopping list
+
+**Do not hand a human a list you have not tried yourself.** A screen that writes
+`NEEDS_HUMAN.md` and stops is guessing that those files are blocked. Usually most of them are
+not: publisher CDNs are ungated (§13 step 2), and only the PMC `/bin/` route sits behind the
+proof-of-work gate. On the first journal screened this way, **three of the files on the list came
+back with a plain `curl` on the first try** -- including one the entry had named wrongly, so the
+human had already fetched the wrong file.
+
+**Scope: papers in `screened.md`'s PASS and `## Parked` tables, and nothing else.** Never the
+candidate list, never a paper gate C rejected. That is what makes this step consistent with the
+prohibition below: nothing is downloaded for a paper that may never be extracted.
+
+Per entry in `NEEDS_HUMAN.md`:
+
+1. **Try to fetch it.** Build the URL per `playbook/fetching.md` §13 -- the DOI comes from
+   `xml/<PMID>.xml`, which is already on disk, and the filename from the card. Write straight into
+   `incoming/<PMID>/`. If the publisher has no template in §13, say so in the entry and stop; do
+   not improvise a host.
+2. **Check the bytes, not the exit code.** The gate answers HTTP 200 with an HTML shell. `§13` has
+   the check. A file of the wrong type is a failed fetch -- delete it, leave the entry standing.
+3. **Open what arrived.** This is the real work of the step and the part no script does. Confirm
+   the file holds what the entry claimed, then write what you found into `notes/<PMID>.md`: sheet
+   names, which row the header is on, the column names, the row count, and the traps -- a sheet
+   name with a trailing space, two tables side by side in one sheet, a missing value written as a
+   literal `A`, a D and J column swapped. **Say plainly when the screen guessed wrong.** One
+   locator advised "try the Source Data xlsx first"; the xlsx turned out to be nucleotide-only and
+   could not supply a single mandatory gene call.
+4. **Expect a resolved blocker to create a new one.** A supplement that finally supplies the
+   peptide sequences may have no V/J column at all. Append a new entry -- see the rule above about
+   one entry per file -- and try to fetch that one too.
+5. **Rewrite the entry.** Arrived: move it to `## Done` with what it actually holds. Still
+   blocked: leave it in `## TODO` and fill in `why a human`, which is now a fact rather than an
+   assumption.
+6. **A parked paper may change verdict.** If the fetch settles it, move its row out of
+   `## Parked` into the PASS or `## Failed` table, update `notes/<PMID>.md`, and record it in
+   `sweep.md`.
+
+The division of labour: **the CDN attempt is free, so exhaust it before asking for anything.** A
+human's time is for the proof-of-work gate, paywalls and logins -- not for files a `curl` would
+have returned.
+
+Re-entrant by design. Running it again retries only what is still outstanding, so it is worth
+re-running after a wave adds entries, or when a publisher route is added to §13.
+
 ## Do not
 
-- **Do not download supplementary files.** The inventory on the card is enough to judge. Fetching
-  is extraction's job, where a human is present to unblock a gated file. Fetching here means
-  downloading for papers that may never be extracted.
+- **Do not download supplementary files while screening.** The inventory on the card is enough
+  to judge, and fetching during gates A-C means downloading for papers that may never be
+  extracted. Step 6 is where files are fetched, after the verdicts exist and only for papers that
+  passed — which is the same rule, not an exception to it.
 - **Do not assign an `ID` or touch `paper_source.md`.** IDs are assigned when a paper enters an
   extraction batch. `screened.md` is the waiting list.
 - **Do not extract.** If a locator is easy to write, write it and stop.

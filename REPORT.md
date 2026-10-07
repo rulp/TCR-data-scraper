@@ -31,12 +31,14 @@ exactly one place.
 | 21 | A paper with no T cell receptor in it at all | `playbook/judgement.md` | a screen card flags no TCR evidence |
 | 22 | Peptides in the paper that are not the paper's peptides | `playbook/judgement.md` | **every extraction**; screening |
 | 23 | A receptor whose binding does not depend on the peptide | `playbook/judgement.md` | SPR/structure with no activation |
+| 24 | IGNORE — GEO accession pages behind a reCAPTCHA | `playbook/fetching.md` | checking a GSE/GSM from a script |
 | — | Decisions that recur | `playbook/judgement.md` | **every extraction** |
 | — | The checks, as runnable assertions (C1–C12) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |
 
-**§1–§10 and §13–§23 are solved or have a stated workaround** — reuse the method. **§11–§12 are
-marked IGNORE**: they cannot be resolved without a human, so do not burn time re-attempting them.
+**§1–§10 and §13–§23 are solved or have a stated workaround** — reuse the method. **§11, §12 and
+§24 are marked IGNORE**: they cannot be resolved without a human, so do not burn time
+re-attempting them.
 
 `playbook/judgement.md` is mandatory for every extraction and holds the *reasoning*;
 `playbook/checks.md` holds the matching *tests* and is loaded at Step 4, before anything is

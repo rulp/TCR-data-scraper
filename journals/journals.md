@@ -26,9 +26,11 @@ journals/
     ├── cards/<PMID>.md          the mechanical card, written by probe.py
     ├── screened.md              THE LIST — passing papers, author + PMID + what is there
     ├── notes/<PMID>.md          the locator: where each schema column comes from
-    ├── NEEDS_HUMAN.md           exact files to fetch by hand, with destination paths
-    ├── incoming/<PMID>/         those files once fetched, waiting for an ID -- Step 0 of
-    │                            the extraction moves them into <ID>_<Author>/raw/
+    ├── NEEDS_HUMAN.md           what is still missing after the screen tried to fetch it:
+    │                            one entry per file, with its destination and why a human
+    ├── incoming/<PMID>/         those files once fetched -- by the screen's step 6 or by
+    │                            hand -- waiting for an ID. Step 0 of the extraction moves
+    │                            them into <ID>_<Author>/raw/
     └── xml/<PMID>.xml           cached PMC XML (gitignored)
 ```
 

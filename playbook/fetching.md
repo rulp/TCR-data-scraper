@@ -109,8 +109,25 @@ What to do instead, in order:
    open-access papers tried here** (§19). So give it one short-timeout attempt and move to step 2
    — the refusal is a definitive no, and a timeout is not worth a retry. **Do not build any
    automated step on this endpoint.**
-2. **The publisher CDN**, which is usually ungated (Elsevier `ars.els-cdn.com/content/image/1-s2.0-<PII>-mmcN.<ext>`;
-   Springer `static-content.springer.com` / `media.springernature.com`).
+2. **The publisher CDN**, which is usually ungated, and for a Springer/Nature paper is the move
+   to try *first* -- 8 of 8 Nature Communications supplementary files came back on 2026-10-06,
+   three of them by script after a screen had already written them onto a human's shopping list.
+
+   ```
+   Springer   https://static-content.springer.com/esm/art%3A10.1038%2F<DOI-suffix>/MediaObjects/<filename>
+   Elsevier   https://ars.els-cdn.com/content/image/1-s2.0-<PII>-mmcN.<ext>
+   ```
+
+   `<DOI-suffix>` is everything after `10.1038/`, e.g. `s41467-025-63288-3`. Take it from the
+   cached XML, which the probe already wrote -- no lookup call:
+
+   ```bash
+   grep -o '<article-id pub-id-type="doi">[^<]*' journals/<J##>_*/xml/<PMID>.xml | head -1
+   ```
+
+   `<filename>` is the bare `xlink:href` from `<supplementary-material>`, which is what the
+   card's "supplementary files" section already lists. Leave `%3A` and `%2F` encoded; a literal
+   `:` or `/` there 404s. `media.springernature.com` is the same store under another name.
 3. **Main-paper figure images**, which `/bin/` *does* serve without any challenge — the §1/§12
    asymmetry holds. Supplementary *figures* are usually bound into a supplementary PDF and are
    therefore gated, while main figures are not.
@@ -120,6 +137,24 @@ What to do instead, in order:
 
 Observed on PMC10841602 (Dezfulian 2023), where `NIHMS1947859-supplement-6.pdf` — Figure S6, holding
 two minimal-epitope panels — was the sole blocker for two otherwise complete rows.
+
+**Check the bytes, never the status code.** The gate answers **HTTP 200** and hands back a
+~1,800-byte HTML shell, so an exit code of 0 and a file on disk prove nothing. A fetch succeeded
+only if the file is the type it claims to be:
+
+```bash
+curl -sS -L --max-time 120 -o "$out" "$url" && file -b --mime-type "$out"
+```
+
+`application/pdf` or `...spreadsheetml.sheet` is a success; `text/html` is the gate. A 2 KB
+`.xlsx` is the gate too, not a small spreadsheet. Delete it rather than leaving it to be found
+later and mistaken for data.
+
+**One request at a time to a publisher host.** `probe.py`'s rate limit is NCBI's and does not
+apply here, and no publisher CDN policy is recorded anywhere -- so stay conservative: serial
+downloads, a short pause between them, never a fan-out of parallel agents against one host.
+Whatever you do with the files *after* they land can be parallelised freely; the downloads
+cannot.
 
 ## 19. Resolving a PMID, and what the PMC APIs actually hand you
 
@@ -152,3 +187,37 @@ of candidate papers are in PMC**, so this route covers nearly the whole corpus.
 So: **the inventory is free and reliable; the bytes are not.** A screen should judge from the
 inventory and defer downloading, and a gated file becomes a precise request to the user — name,
 source URL, destination path, and what it unblocks.
+
+## 24. IGNORE — GEO accession pages are behind a reCAPTCHA
+
+`https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=<GSE>` does not serve the accession page to a
+script. It answers **HTTP 200** with a Google reCAPTCHA challenge page -- `recaptcha-boq-challengepage`
+in the body, no supplementary file list anywhere in it. Like the PMC proof-of-work gate (§13) this
+is a bot check rather than a permissions problem, **it must not be worked around**, and the same
+page opens normally in a browser.
+
+This matters because a data-availability statement naming a GEO accession reads like a cheap
+check and is not one. Treat a GEO accession as a human item from the start: name the accession
+and what it would settle, and let someone open it.
+
+Two things that do still work from a script, and are worth trying first:
+
+- **Zenodo's REST API is open** and gives the file list without any challenge:
+  ```
+  https://zenodo.org/api/records/<id>
+  ```
+  A *concept* DOI redirects to the current record, so the `id` you get back may differ from the
+  one the paper cites -- `14516943` answers as record `14551359`. The response carries each
+  file's `key` and `size`, which is enough to decide whether a download is worth it before
+  starting one. Sizes are often large: the record above holds a 5.8 GB, a 318 MB and a 165 MB
+  archive, none of which a screen should pull on spec.
+- **A GitHub-hosted deposit is fully open**, both the issue thread and the file:
+  ```
+  https://api.github.com/repos/<owner>/<repo>/issues/<n>
+  https://raw.githubusercontent.com/<owner>/<repo>/master/<path>
+  ```
+  Observed on `antigenomics/vdjdb-db` issue 413, whose body named
+  https://raw.githubusercontent.com/antigenomics/vdjdb-db/master/chunks/PMID_40640147.tsv --
+  28 KB, 154 rows with paired CDR3/V/J, epitope and MHC, and it turned a PARK into a PASS for one
+  GET (Sturmlechner 2025, PMID 40640147). When a paper
+  says its sequences went to VDJdb, this is the route -- not the VDJdb web UI.
