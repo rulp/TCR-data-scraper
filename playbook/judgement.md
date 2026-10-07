@@ -119,6 +119,17 @@ Such a paper can still yield its validated TCR/epitope pairs — the ones named 
 peptide list or an activation panel. Say in `source_notes` that the screen itself was not
 converted, and why. *Observed: Kula 2019, PMID 31398327.*
 
+**The same trap wearing different clothes: a reactivity label that names a protein.** Single-cell
+papers often publish a per-cell `Ag_reactivity`-style column holding `SLA`, `PDCE2`, `CYP2D6`,
+`FLU`. It is tempting because it sits right beside clean paired CDR3/V/J and looks like the
+antigen column the schema wants. It is not: the cells were selected against a whole protein or a
+pool, so the label is the *assay*, not the epitope. **Attributing them to a named epitope the
+paper cites elsewhere is fabrication**, even when the paper discusses exactly one epitope -- it
+turns one citation into as many rows as there are cells. If no per-cell epitope mapping is
+published, the paper FAILs here no matter how good the TCR side is.
+*Observed: Cardon 2025 (PMID 39880819) -- 725 clean paired clonotypes, zero usable antigens;
+tempting to assign all 305 SLA-reactive ones to Sepsecs187-197, which the paper never does.*
+
 ## 15. Papers that state no hit threshold at all
 
 Some papers have no threshold to quote. Confirm with `checks.md` **C7**: if `threshold` never
@@ -259,14 +270,19 @@ are genuine, so every automatic check passes, and the rows look exactly like pos
 They are not. A specificity model trained on them learns that this receptor binds those peptides,
 when what the paper demonstrated is the opposite: that it binds *regardless of* them.
 
-**This is a decision to take before extracting, not during.** Two defensible answers -- exclude
-the paper, or ship the rows in a companion CSV with an explicit outcome column saying the binding
-is peptide-independent -- and one wrong one, which is to let them into the `clean` sheet unmarked.
-Say which was chosen in `source_notes`, and say why.
+**This project excludes them. The decision is settled -- do not re-litigate it per paper.**
+A receptor whose binding does not depend on the peptide is useless for the model this dataset
+trains, so the paper FAILs on this section alone, however good the rest of it looks. Record the
+FAIL with the reason so a later wave does not pay to re-screen it, and keep the locator note if
+one was already written -- it shows the paper was understood rather than skipped.
+
+Do not ship the rows in a companion CSV "just in case" either. That was the other defensible
+answer before the call was taken; it is not now.
 
 The tell is in the paper's own framing: a structure paper reporting that the TCR "does not contact
 the peptide", paired with a functional figure showing no CD69 or no cytokine.
-*Observed: Lim 2025 (PMID 40199885), the G9 TCR on HLA-DQ2.5/DQ2.2.*
+*Observed: Lim 2025 (PMID 40199885), the G9 TCR on HLA-DQ2.5/DQ2.2 -- screened PASS, then FAILed
+on this section once a human read it. Six SPR rows, all real affinities, none of them specificity.*
 
 ## Decisions that recur
 
