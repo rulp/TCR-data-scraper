@@ -170,9 +170,16 @@ Anything you cannot fetch. One block per file, precise enough to action without 
 ## 38016469 Dezfulian -- NIHMS1947859-supplement-6.pdf
 - why: holds Fig. S6F/S6G, the only place the minimal epitopes appear
 - try: https://pmc.ncbi.nlm.nih.gov/articles/PMC10841602/  (supplementary list)
-- put it in: <ID>_Dezfulian/raw/
+- put it in: `journals/<J##>_*/incoming/38016469/`   (mkdir -p it)
 - blocks: Antigen and MHC columns -- without it the paper yields 4 rows instead of 6
 ```
+
+**The destination is the staging directory, never a paper folder.** At screen time the paper has
+no `ID` yet — one is assigned only when it enters an extraction batch — so `<ID>_Dezfulian/raw/`
+names a path that does not exist and inventing a number would break the assign-on-append rule.
+`tools/new_paper.py` moves everything in `incoming/<PMID>/` into `raw/` at Step 0 of the
+extraction, so a file fetched today lands in the right place whenever that happens. Without a
+real destination this list cannot be worked in one sitting, which is its only purpose.
 
 The user has institutional access and can fetch these in one sitting. **State what the file
 unblocks**, so they can judge whether it is worth the trip. This is how

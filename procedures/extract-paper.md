@@ -81,6 +81,23 @@ Keep it to that job:
   assert it. That is what stops a later edit from silently drifting, and it costs one line each.
 - **Record the fetch commands in the module docstring** so `raw/` can be rebuilt from scratch.
 
+### Step 0 — take the paper into the batch
+
+Three things happen at this moment and nowhere else, because this is where a paper stops being
+a candidate: it gets its permanent **`ID`**, its **`paper_source.md` row**, and its **root-level
+folder**. `journals/journals.md` owns the rule; this is where it is performed.
+
+```bash
+python3 tools/new_paper.py --pmid <PMID> --from <J##>     # or --author/--year/--journal ad hoc
+python3 tools/new_paper.py --pmid <PMID> --from <J##> --dry-run
+```
+
+It takes `max(existing) + 1` — never `count + 1`, because a dropped paper keeps its row and its
+number — refuses a PMID already in the index, creates `<ID>_<FirstAuthor>/raw/`, and **moves
+across anything already fetched into `journals/<J##>_*/incoming/<PMID>/`**. Files the screen
+listed in `NEEDS_HUMAN.md` are therefore already in `raw/` by the time Step 1 runs; check there
+before concluding a blocker is still blocking.
+
 ### Step 1 — inventory where the data actually is
 
 **If the paper came from a journal screen, this step is already done.** Look for

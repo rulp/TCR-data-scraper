@@ -27,6 +27,8 @@ journals/
     ├── screened.md              THE LIST — passing papers, author + PMID + what is there
     ├── notes/<PMID>.md          the locator: where each schema column comes from
     ├── NEEDS_HUMAN.md           exact files to fetch by hand, with destination paths
+    ├── incoming/<PMID>/         those files once fetched, waiting for an ID -- Step 0 of
+    │                            the extraction moves them into <ID>_<Author>/raw/
     └── xml/<PMID>.xml           cached PMC XML (gitignored)
 ```
 
