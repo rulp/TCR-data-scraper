@@ -242,6 +242,13 @@ paper's own `raw/`, which exists from that moment. So the file stays a list of w
 rather than growing by a wave every time the journal is screened. Append new entries; never
 hand-edit the `## Done` section.
 
+**Only a request for a FILE gets a `###` entry.** A judgement call, a cleanup, a question for the
+user -- anything that is not "fetch this" -- goes in a plain section with no PMID in its heading.
+The drain settles an entry when a file it names is present, so a decision written as an entry is
+collapsed into `## Done` the moment the paper is extracted, and the thing nobody has decided yet
+disappears from the list silently. Observed: a "delete this wrongly-staged file" item and a
+pending §23 judgement call were both swallowed this way before being re-homed.
+
 **One entry per file, even for the same paper.** An entry is settled when *any* file it names has
 arrived, so a still-needed file folded into an already-satisfied entry disappears without trace.
 When a fetched file answers one question and raises another -- a supplement that supplies the
