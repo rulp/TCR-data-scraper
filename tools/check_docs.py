@@ -131,7 +131,11 @@ def main():
                 continue
             dangling.append((rel, cited))
 
-        if rel not in ID_OK:
+        # RUNTIME files are generated into the gitignored workspace and their whole job is to
+        # name this machine's concrete artifacts -- AUDIT.md reports on "Paper 001" because
+        # that is the paper it audited. Policing them for <ID> placeholders is checking the
+        # wrong thing: the rule exists to keep the TOOLKIT portable, and these are output.
+        if rel not in ID_OK and not RUNTIME.match(os.path.basename(rel)):
             for m in LOCAL_ID.findall(text):
                 local_ids.append((rel, m))
 

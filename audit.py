@@ -177,10 +177,22 @@ def variants(field, value):
         # Supplementary tables routinely abbreviate: a TRAJ column holding "J43" with a
         # neighbouring TRAV column means TRAJ43. Accept the abbreviations the full name
         # implies, so a legitimate normalisation is not reported as a fabrication.
-        forms = {v}
-        if v.startswith("TR") and len(v) > 3:
-            forms |= {v[2:], v[3:]}
-        return [sorted(forms)]
+        #
+        # IMGT dual TRA/TRD genes carry a slash -- TRAV14/DV4*03, TRAV38-2/DV8*01 -- and the
+        # tokenizer does not treat "/" as a word character, so the file holds TRAV14 and
+        # DV4*03 as two separate tokens and the full name is never one. Split on the slash
+        # and require BOTH halves, exactly as a class II heterodimer below is split and every
+        # chain must be found. Without this, every paper using a dual gene reported its Va as
+        # unverifiable even when the name was printed verbatim in raw/.
+        def _forms(part):
+            f = {part}
+            if part.startswith("TR") and len(part) > 3:
+                f |= {part[2:], part[3:]}
+            return sorted(f)
+
+        if "/" in v:
+            return [_forms(part.strip()) for part in v.split("/") if part.strip()]
+        return [_forms(v)]
     if field not in ALLELE_COLS:
         return [[v]]
     groups = []

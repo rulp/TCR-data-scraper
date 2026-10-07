@@ -290,6 +290,39 @@ the peptide", paired with a functional figure showing no CD69 or no cytokine.
 *Observed: Lim 2025 (PMID 40199885), the G9 TCR on HLA-DQ2.5/DQ2.2 -- screened PASS, then FAILed
 on this section once a human read it. Six SPR rows, all real affinities, none of them specificity.*
 
+## 26. A data-quality flag encoded as text colour
+
+A supplementary table can mark its own bad rows in a way no text extraction can see. Menon 2024
+(PMID 38684663) ends Supplementary Tables 6-9 with a one-line legend: **"Red denotes truncated
+CDR3 regions."** The colour is the only thing separating a complete CDR3 from a fragment, and
+`pypdf` -- like every text extractor -- returns the characters without it. A parser reads a
+truncated sequence as a clean one.
+
+**Look for the legend.** A table that colour-codes anything says so in a caption or a footnote,
+usually in one short sentence under the table. Read those lines before parsing, not after; they
+are the only warning you get.
+
+**Then assume the flag is invisible and catch the rows another way.** For a CDR3 the shape
+validator does most of the work -- a truncation at the N-terminus loses the conserved cysteine,
+which `checks.md` C2 already rejects. That is what caught `SCGEGGNKLVF` here. **It is not a
+complete defence**: a truncation at the *other* end leaves a sequence that still starts with `C`
+and still passes the alphabet and length tests, so some fraction of red rows ship looking clean.
+
+Two things make the residue recoverable rather than invisible:
+
+- **Cross-check against a machine-readable file** that covers the same cells, even one that
+  cannot replace the table. Menon's Source Data holds the same clonotypes as *nucleotide*
+  sequences with no V/J column -- useless as a source, decisive as a check. Translating every
+  cell in three frames and searching for the transcribed CDR3s put 237/286 alpha and 381/397
+  beta cells on a PDF sequence; the ~17% of alpha cells that miss are the best available
+  estimate of how many truncated rows the shape validator did not catch.
+- **Assert the hit rate**, not just the parse. A rate is the only quantity that moves when a
+  transcription silently degrades.
+
+If the colour matters more than this -- a table where the flag marks *which rows are positives*
+rather than which are damaged -- the table is not extractable from text at all, and the figure
+route in `figures.md` applies instead.
+
 ## Decisions that recur
 
 Resolve these per paper and record the choice in `source_notes`:
