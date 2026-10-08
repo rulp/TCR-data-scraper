@@ -77,9 +77,19 @@ only has to be *resolvable*. It is written there; do not restate or re-derive it
 - **PARK** — figure-only with no cheap signal, no PMC access, or a TCR route we have not indexed.
   Parked *with a reason*, re-checkable later. This is the default when you are unsure.
 - **FAIL** — the paper supplies no peptide data of its own, **or every epitope it supplies is
-  chemically modified** and therefore out of scope (`playbook/judgement.md` §29). The only verdict
-  that ends a paper. Record the modification in the `## Failed` row: that rule is reversible, and
-  the row is how the paper is found again if it is reversed.
+  chemically modified** and therefore out of scope (`playbook/judgement.md` §29), **or an
+  extraction found that no published artifact joins its chains into receptors, or its receptors to
+  its peptides**. The only verdict that ends a paper. Record in the `## Failed` row what is
+  missing — the modification, or the absent artifact — because both of those rules are reversible
+  and the row is how the paper is found again if either one is.
+
+  **The third clause is assigned by an extraction, never at gate C.** Do not try to apply it while
+  screening. The screen cannot tell in advance which file carries the paired chains, and it has
+  guessed wrong on papers that went on to yield hundreds of rows — in one J01 wave the locator's
+  named carrier was wrong for *every* paper that produced data, and those papers produced 1936
+  rows between them. A gate built on that question would cost far more than it saves. Finding this
+  class at extraction is the cheap outcome, not the failure. `playbook/judgement.md` §30 and §32
+  record the two shapes it takes.
 
 Three traps the cards are built to expose:
 

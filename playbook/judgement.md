@@ -551,3 +551,87 @@ Three failures, in order of how expensive they are to undo:
 **What this costs, stated plainly:** the autoimmunity literature where the modification *is* the
 finding — citrullination in rheumatoid arthritis, phosphopeptides in cancer — is now out of the
 corpus. That is the accepted price of a peptide column a model can read without a legend.
+
+## 30. Both chains published, and never paired
+
+*Observed in Liu 2025 (PMID 41034205).* Its Supplementary Data 2 is better than most: 56 public
+TCRalpha and 29 public TCRbeta clonotypes, each with **V and J**, so section 28 never fires. The
+cells were tetramer-sorted on one named 15-mer, so the antigen is defined per cell. Every one of
+the ten columns has a source.
+
+**And it yields no rows**, because the two lists are keyed only by epitope. The authors have the
+pairing -- Methods filter cells to 1a1b or 2a1b -- but no published artifact carries it.
+
+**Do not pair them.** 56 alphas and 29 betas against three epitopes is 1624 receptors that were
+never observed, each one indistinguishable in the output from a real one. This is worse than a
+missing row: the dedupe key is (`CDR3a`, `CDR3b`, `Antigen`) (§6), so an invented pairing is a
+fresh unique key that nothing downstream can detect.
+
+Before concluding, check in this order -- a public clonotype list is often not the only artifact:
+
+1. **Source Data, sheet by sheet.** A paired-repertoire figure (a circos, a clonotype network)
+   usually has one. In this paper it did not: the Source Data workbook had sheets for Figures 1,
+   4 and 6 and none for Figure 2, which is where the pairing figure was.
+2. **The Supplementary Information PDF**, even when the locator calls it figure-bound.
+3. **A sequence archive.** Raw FASTQ is not a route: re-running the authors' aligner is a
+   different extraction, not this one.
+
+A circos is not a rescue even when transcribed. It gives TRAV-TRBV **gene** pairing frequencies,
+never CDR3 to CDR3.
+
+**What to do instead.** Ship the chains as a `clean_<ID>_unpaired_chains.csv` companion with
+their V, J, epitope, allele and species, set the paper to `Status = blocked` in
+`paper_source.md`, and assert in the build script that the sheet still has no joining column --
+so a reissue that adds one fails the build instead of going unnoticed.
+
+## 31. A deposit that publishes the strict IMGT CDR3, not the junction
+
+*Observed in Malone 2025 (PMID 41407706).* Its GEO metadata gives `tcra = AEDWNARLM`, and
+`docs/schema.md` requires every CDR3 to begin with the conserved cysteine. Nothing is wrong with
+the deposit: **IMGT CDR3 is positions 105-117**, which excludes C104 and the F or W at 118, while
+this corpus -- like VDJdb and 10x -- writes the **junction**, 104-118 inclusive.
+
+So the conversion is `"C" + cdr3 + <the J germline's conserved residue>`, and it is definitional
+rather than inferred. Two things make it safe to automate:
+
+- **The trailing residue is not always F.** Take it from the J gene's own IMGT germline: TRAJ33
+  ends in W, and TRAJ35's FR4 opens on a cysteine. Hard-coding `F` corrupts a few percent of rows
+  silently.
+- **The frame is checkable.** A junction normally ends on residues that are still J germline, so
+  measure the overlap between the CDR3's tail and the germline before FR4. In that paper 83% of
+  rows overlap by three or more residues. Assert it **corpus-wide, never per row** -- a heavily
+  trimmed J legitimately leaves no germline residue at all, so a per-row gate would discard real
+  receptors.
+
+Confirm the column really is the strict form before converting: count how many strings start with
+`C` (0.3% there), and check a beta chain, where prepending `C` should produce the canonical
+`CAS...` in most rows (79% there). If instead most strings already start with `C`, the column is
+already a junction and prepending another one is corruption.
+
+A few J germlines carry no `[FW]G.G` anchor at all. Those rows cannot be closed in frame: they go
+to `clean_<ID>_unresolved.csv` with the reason, under **C13**.
+
+## 32. Reconstructing an analysis: check it against the paper's own count first
+
+*Observed in Ghoreyshi 2026 (PMID 42337259).* It deposits everything except the answer: the
+tetramer barcode code, per-cell barcode counts, and 10x contigs with V, J and CDR3 already
+called. What it never publishes is which TCR it assigned to which peptide, and Methods give only
+the clonotype-level rule (">90% tetramer binding consensus") with no per-cell rule -- no
+normalisation, no cutoff, no tie-break. That is §15.
+
+The temptation is to reimplement, because every input is right there. **Before shipping a single
+row from a reconstruction, reproduce a number the paper states.** Here the paper's Table 1 reports
+94 TCR cases for the experiment; the deposit's filtered contigs for it hold 532 cells of which 45
+carry both chains, giving 5 clonotypes and 3 that clear the stated consensus. Three against
+ninety-four is not a near miss, it is a different pipeline, and the three rows would have looked
+perfectly clean in the output.
+
+The check costs one count and it is the difference between a reconstruction and a guess wearing
+the paper's name. Candidates for it: a per-dataset n, a per-epitope n in a results table, a
+clonotype total, a cell total. If none is stated, there is nothing to check against and the
+reconstruction should not ship at all.
+
+When the check fails, §15's second option still applies: ship the continuous measurement in a
+companion with `Binding_Outcome = "NOT CALLED - paper states no threshold"`, so the work survives
+for whoever obtains the authors' assignment. 322 paired clonotypes with gene calls and raw
+tetramer counts left that paper in a state where one file would finish it.
