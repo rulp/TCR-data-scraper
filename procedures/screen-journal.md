@@ -76,7 +76,10 @@ only has to be *resolvable*. It is written there; do not restate or re-derive it
   paper it cites.
 - **PARK** — figure-only with no cheap signal, no PMC access, or a TCR route we have not indexed.
   Parked *with a reason*, re-checkable later. This is the default when you are unsure.
-- **FAIL** — the paper supplies no peptide data of its own. The only verdict that ends a paper.
+- **FAIL** — the paper supplies no peptide data of its own, **or every epitope it supplies is
+  chemically modified** and therefore out of scope (`playbook/judgement.md` §29). The only verdict
+  that ends a paper. Record the modification in the `## Failed` row: that rule is reversible, and
+  the row is how the paper is found again if it is reversed.
 
 Three traps the cards are built to expose:
 

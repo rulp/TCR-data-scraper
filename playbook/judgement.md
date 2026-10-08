@@ -175,10 +175,17 @@ flattening a microbial epitope into `Human` states something false; a model trai
 table then cannot separate self from microbial ligands, which is what several of these papers
 exist to study.
 
-Use the source organism as stated — `Human`, `Synthetic`, `CMV`, `HIV-1`, `Bacterial` — and keep
-deciding it per *source*, never per peptide (§10). The vocabulary is open by necessity, so record
-every value used and flag new ones to the user: fixing it is a schema decision, not a per-paper
-one. Check with `checks.md` **C8**.
+Use the source organism as stated — `Human`, `Mouse`, `Synthetic`, `CMV`, `HIV-1`, `Bacterial` —
+and keep deciding it per *source*, never per peptide (§10). The vocabulary is open by necessity,
+so record every value used and flag new ones to the user: fixing it is a schema decision, not a
+per-paper one. Check with `checks.md` **C8**.
+
+**`Mouse` is a value, added 2026-10-07 for a murine self or tumour peptide** presented on H2 —
+`docs/schema.md` has the allele spelling. The trap is that a mouse experiment is not a mouse
+*peptide*: most murine TCR work presents an LCMV, influenza or model peptide such as OVA on a
+murine MHC, and those stay `LCMV`, `Influenza A virus` and `Synthetic`. `pMHC_species` reads the
+peptide's origin, never the mouse the assay ran in, and never the species of the MHC beside it —
+which is exactly the field `TCR_species` is for.
 
 ## 18. MHC class II papers break class-I assumptions
 
@@ -493,3 +500,54 @@ R-deposit reader, a conversion bug made it return its own error message as the f
 file then indexed as readable-but-empty and 53 fields that really were in it were reported
 **contradicted** rather than unverified. A reader that half-works inverts the audit's most serious
 verdict, so check a new one by asking whether a value you know is in the file comes back.
+
+## 29. Chemically modified epitopes are out of scope
+
+**Decided 2026-10-08 by the user.** Raised by Loh 2024 (PMID 39043656), whose four HLA-DR4
+epitopes each carry a citrulline. The rule it settles is general and binds every paper after it.
+
+**If the residue the receptor reads cannot be written in the 20-letter alphabet, the row does not
+ship.** The test is representability, not the word "modification":
+
+| Out of scope | In scope |
+|---|---|
+| citrulline, phospho-Ser/Thr/Tyr, methyl- and acetyl-lysine, nitrotyrosine, cysteinylation, glycosylation, any non-natural library residue | **deamidation** — Q→E and N→D produce *standard* residues, so a deamidated gliadin peptide is an ordinary 20-letter string |
+| a spliced or trans-spliced peptide whose sequence the paper does not print in full | a sequence that is unusual but writable, however exotic its origin |
+
+**The decision is per row, not per paper.** A paper that assays a modified epitope *and* its
+unmodified counterpart ships the counterpart and drops the other. Only a paper whose epitopes are
+all modified yields nothing, and that is the case that reaches a verdict.
+
+### Why out rather than encoded
+
+Three failures, in order of how expensive they are to undo:
+
+1. **Writing the parent residue fabricates data.** The modification is usually the specificity
+   itself. Back-mutating cit→R produces a peptide that was never assayed and labels it bound —
+   and because the dedupe key is (`CDR3a`, `CDR3b`, `Antigen`) (§6), a later paper that measures
+   the true arginine peptide and sees nothing collides with it *exactly*, leaving two identical
+   rows with opposite answers and no field that separates them.
+2. **A 21st letter only helps a reader who knows it.** Every downstream consumer that encodes 20
+   amino acids has to be taught the symbol, and it would have to be decided once for all
+   modifications rather than per paper.
+3. **An `Antigen_modification` column widens the sheet**, which `docs/schema.md` says it does not
+   do.
+
+### What to do with one
+
+- **Extraction.** Drop the rows. Not to `clean_<ID>_unresolved.csv` — that file is **C13**, for a
+  value that exists and could not be settled. These values are settled and outside the contract.
+  Count them, assert the count, and name the modification in `source_notes`. If *every* epitope is
+  modified the paper yields no rows at all and its `paper_source.md` row becomes
+  `Status = dropped`.
+- **Screening.** This is a **FAIL**, not a PARK. The verdict rule in `screen-journal.md` is worded
+  for it. Parking would be waiting on a schema decision that has already been taken.
+- **Record the PMID and the modification in the journal's `## Failed` table anyway.** This rule is
+  the one in the playbook most likely to be reversed: if the schema ever gains a modification
+  field, these papers are recoverable with a `grep` over the failed tables instead of a re-sweep.
+  Loh is the first entry, and its TCR side is complete (paired αβ, 56 CDR3s, PDB 8TRR/8TRQ/8TRL),
+  so it would come back cheaply.
+
+**What this costs, stated plainly:** the autoimmunity literature where the modification *is* the
+finding — citrullination in rheumatoid arthritis, phosphopeptides in cancer — is now out of the
+corpus. That is the accepted price of a peptide column a model can read without a legend.

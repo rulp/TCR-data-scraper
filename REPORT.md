@@ -36,11 +36,12 @@ exactly one place.
 | 26 | A data-quality flag encoded as text colour | `playbook/judgement.md` | parsing a table out of a PDF |
 | 27 | An epitope cited by position, never printed | `playbook/fetching.md` | the antigen is a range, not a sequence |
 | 28 | The V and J genes are not in the paper | `playbook/judgement.md` | a mandatory gene column has no stated value |
+| 29 | Chemically modified epitopes are out of scope | `playbook/judgement.md` | an epitope carries a non-standard residue |
 | — | Decisions that recur | `playbook/judgement.md` | **every extraction** |
 | — | The checks, as runnable assertions (C1–C13) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |
 
-**§1–§10, §13–§23, §25 and §26 are solved or have a stated workaround** — reuse the method. **§11, §12 and
+**§1–§10, §13–§23, §25, §26 and §29 are solved or have a stated workaround** — reuse the method. **§11, §12 and
 §24 are marked IGNORE**: they cannot be resolved without a human, so do not burn time
 re-attempting them.
 

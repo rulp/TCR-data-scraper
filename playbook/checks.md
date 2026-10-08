@@ -10,7 +10,7 @@ moment someone edits the script.
 
 | # | Check | Fires when | Why — read before deciding |
 |---|---|---|---|
-| C1 | Amino-acid alphabet | a sequence column holds non-residues | `judgement.md` §5 |
+| C1 | Amino-acid alphabet | a sequence column holds non-residues | `judgement.md` §5, §29 |
 | C2 | CDR3 shape | a CDR3 lacks the conserved `C`, or is absurdly short | `judgement.md` §16 |
 | C3 | Peptide length window | a peptide is outside the class-I or class-II range | `judgement.md` §18 |
 | C4 | Masked placeholders | an ML training file leaks `XXXXXXXXX`-style rows | `judgement.md` §5 |
@@ -51,6 +51,12 @@ for col in ("CDR3a", "CDR3b"):
 for pep in clean["Antigen"]:
     assert valid_peptide(pep, MHC_CLASS), f"bad peptide: {pep!r} ({len(pep)})"
 ```
+
+**A C1 failure has two very different causes.** Junk in a published positive set — a control
+label, a mask, an integer — is §5, and is usually *recoverable*: the row is real and the value can
+be found. A named chemical modification is §29, and is not: the value is known, correct, and
+outside the contract, so the row is dropped and counted. Resolve the first, drop the second, and
+never let the second route into `clean_<ID>_unresolved.csv` (**C13**), which means something else.
 
 **The leading `C` is not optional.** `HPEGKLIF` and `CAVFF` are both pure amino-acid letters and
 neither is a CDR3; an alphabet-only check passes both. See `judgement.md` §16.

@@ -29,10 +29,20 @@ score all live elsewhere — see below — precisely so this sheet never widens.
 - **The peptide goes in `Antigen`.** `MHC` carries the allele without the `HLA-` prefix
   (`A*02:01`, not `HLA-A*02:01`). A class-II heterodimer that needs both chains is written
   `DQA1*05/DQB1*02` — see `playbook/judgement.md` §18.
+- **`Antigen` is the 20 standard amino acids and nothing else, which puts chemically modified
+  epitopes out of scope.** A peptide whose activity depends on a residue the alphabet cannot
+  write — citrulline, a phospho-serine, a methylated lysine — does not get a row, and is not
+  back-mutated to its parent residue to obtain one. Deamidation is *not* affected: Q→E and N→D
+  give standard residues. `playbook/judgement.md` §29 has the boundary and the cost.
+- **Murine MHC keeps its locus prefix: `H2-Db`, `H2-Kb`, `H2-IAg7`** — one token, hyphen after
+  `H2` and nowhere else, whatever the paper writes. Unlike `HLA-`, the prefix cannot be dropped:
+  a bare `Db` collides with the human DP/DQ/DR series, and `H-2Db` would be the only value in the
+  column whose hyphen falls inside the locus name. Class II follows the same shape, so the mouse
+  heterodimer is `H2-IAb`, not `IAb`. There is no `*` allele field to append.
 - **`Human` and `HomoSapiens` are the same term.** Either spelling is fine in the species columns;
   no normalization needed.
-- **`pMHC_species` describes where the peptide actually comes from** — `Human`, `Synthetic`,
-  `CMV`, `HIV-1`, `Bacterial`. Decided **once per peptide *source***, never peptide by peptide.
+- **`pMHC_species` describes where the peptide actually comes from** — `Human`, `Mouse`,
+  `Synthetic`, `CMV`, `HIV-1`, `Bacterial`. Decided **once per peptide *source***, never peptide by peptide.
   The vocabulary is open by necessity; flag a new value to the user. `playbook/judgement.md` §10
   and §17 are where this gets mis-applied.
 
@@ -119,6 +129,12 @@ Both bite on merge. Decide before extending:
 
 A third pressure is now visible: `pMHC_species` has outgrown `Human`/`Synthetic`
 (`playbook/judgement.md` §17). Fixing that vocabulary is a schema decision, not a per-paper one.
+
+- **No modification field on `Antigen`**, so modified epitopes are excluded rather than
+  represented (§29, decided 2026-10-08). Unlike the two gaps above this one is a deliberate
+  narrowing, not an oversight — but it has the same shape, and the same exit: a field here would
+  let the excluded papers back in, and they are listed by PMID in the journals' `## Failed`
+  tables so they can be found without a re-sweep.
 
 **Scale note.** `.xlsx` caps at 1,048,576 rows and screen data routinely exceeds that once
 negatives are included. Use CSV or Parquet at that scale.

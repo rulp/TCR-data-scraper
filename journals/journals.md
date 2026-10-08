@@ -84,7 +84,7 @@ Snapshot: counts taken **2026-10-03**, window `2024/01/01:2026/12/31`. Total `Br
 
 | J## | Journal | NLM `[ta]` | Window | Broad | Plat | Priority | Status | Machine | Last swept | Notes |
 |-----|---------|-----------|--------|-------|------|----------|--------|---------|------------|-------|
-| J01 | Nature Communications | `Nat Commun` | 2024–2026 | 84 | 6 | P1 | in progress | KQ447KXJVT | 2026-10-07 | highest broad count in P1 |
+| J01 | Nature Communications | `Nat Commun` | 2024–2026 | 84 | 6 | P1 | in progress | KQ447KXJVT | 2026-10-08 | highest broad count in P1 |
 | J02 | Journal for ImmunoTherapy of Cancer | `J Immunother Cancer` | 2024–2026 | 76 | 2 | P1 | not started | — | — | strong data mandate |
 | J03 | PNAS | `Proc Natl Acad Sci U S A` | 2024–2026 | 45 | 4 | P1 | not started | — | — |  |
 | J04 | Science Advances | `Sci Adv` | 2024–2026 | 34 | 3 | P1 | not started | — | — |  |
