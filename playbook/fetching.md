@@ -335,3 +335,48 @@ caption of the figure that **defines the population the rows come from** — it 
 the actual reagent — and check both candidates against **C3** before choosing: a nested pair can
 straddle the class-II floor, where one passes and the other does not. Record both labels in
 `source_notes`, and attribute `Antigen` to the cited paper with `origin = external`.
+
+## 36. Figure images from PMC — the `/bin/` path that actually serves bytes
+
+Sometimes the only copy of a table is a figure, and the figure has to be downloaded before
+`playbook/figures.md` can be applied to it. Two of the obvious URLs do not work:
+
+```
+https://www.ncbi.nlm.nih.gov/pmc/articles/<PMCID>/bin/<file>     -> HTML interstitial
+https://europepmc.org/articles/<PMCID>/bin/<file>                -> HTML
+https://pmc.ncbi.nlm.nih.gov/articles/instance/<digits>/bin/<file>   -> the image
+```
+
+The third is the one to use. `<digits>` is the PMCID without the `PMC` prefix. Both failures return
+HTTP 200 with an HTML body, so a download *succeeds* and leaves a file with a `.jpg` name that is
+not an image — **run `file` on it before trying to read it**, or the first symptom will be a
+confusing failure several steps later.
+
+Get `<file>` from the article XML rather than guessing it:
+
+```bash
+python3 - <<'PY'
+import re
+t = open("<PMCID>.xml", encoding="utf-8", errors="replace").read()
+print(sorted(set(re.findall(r'xlink:href="([^"]+\.(?:jpg|png|gif))"', t))))
+PY
+```
+
+Nature-family articles name main figures `<journal>_<year>_<art>_Fig<N>_HTML.jpg` and Extended Data
+figures `..._Fig<N>_ESM.jpg`, numbered **after** the main ones — in a six-figure paper, Extended
+Data Fig. 1 is `Fig7_ESM.jpg`. Do not assume the numbers line up.
+
+**Resolution is usually the problem, not access.** These are typically 800 px wide, which is too
+coarse to read a table of CDR3s. Crop to the panel and upsample before reading it — `sips` is
+present on macOS, and Pillow (`uv run --with pillow`) gives arbitrary crops with a better
+resampling filter:
+
+```python
+from PIL import Image
+im = Image.open("Fig2.jpg")
+im.crop((150, 10, 794, 190)).resize((644 * 5, 180 * 5), Image.LANCZOS).save("panel_a.png")
+```
+
+A panel read at 5× is legible where the same panel at 1× is a guess, and the difference shows up
+as transcription errors rather than as an inability to read anything. Whatever comes out still has
+to be cross-checked under **C10** — see `playbook/figures.md`.

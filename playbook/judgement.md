@@ -635,3 +635,97 @@ When the check fails, §15's second option still applies: ship the continuous me
 companion with `Binding_Outcome = "NOT CALLED - paper states no threshold"`, so the work survives
 for whoever obtains the authors' assignment. 322 paired clonotypes with gene calls and raw
 tetramer counts left that paper in a state where one file would finish it.
+
+## 33. Two ways the §28 matcher silently returns the wrong gene
+
+*Observed in Notti 2025 (PMID 41402338) and Ma 2025 (PMID 39833157).* §28's matcher is sound and
+its margin rule holds. Both of these are mistakes in how it is *driven*, and both fail the same
+ugly way — not with an error, but with a confident call that is wrong, or with a margin that
+collapses and makes a perfectly resolvable paper look ambiguous.
+
+**The offset window is calibrated on crystallography constructs, and a cryo-EM paper breaks it.**
+§28 says to score the best ungapped offset over `range(-5, 12)`, which covers a construct that
+begins at or near the germline. A full-length membrane-embedded construct does not: it carries its
+signal peptide, and 1G4's TCRα begins `METLLGLLILWLQLQWVSS` — nineteen residues — before
+`KQEVTQIPAALSVPEG`. Inside the window the correct gene scores **13/90 and loses**; TRAV41 and
+TRAV35 tie for first at 13 and the margin is 0, which presents as "this paper's chains are
+ambiguous". Unbounded, the same chain scores **93/93 for TRAV21 with a margin of 50**.
+
+Scan every offset. It is a maximum over a superset of the window's offsets, so it cannot return a
+worse answer, and on chains this size it costs microseconds. Treat `range(-5, 12)` as a historical
+note, not a parameter.
+
+**For J, the margin lives in the FR4 cut — and a free-offset scorer destroys it.** V genes are
+long and idiosyncratic, so they separate however they are scored. J genes are 15–20 residues of
+which the last 10–12 are the conserved `[FW]G.GT..` framework that *every* J in the locus shares.
+All the discriminating signal is in the few residues at the 5' end, inside the junction.
+
+So a J has to be matched **anchored at the end of FR4**, with every candidate judged at the same
+anchor. Cut the chain there and compare suffixes. Ma's TCR3 β is the demonstration: anchored,
+TRBJ2-7 scores 14/15 and the best other gene is TRBJ1-6 at 7, a margin of **7** — a clean call.
+Let each J gene slide to its own best offset instead and TRBJ2-3 climbs to 12 by aligning on the
+shared `QYFGPGTRLTVT` tail, the margin falls to **2**, and the row is refused under C13 for no
+reason. Scoring the *untrimmed* chain is the other half of §28's warning and is worse still:
+everything scores 0 and nothing resolves.
+
+Take the cut from the CDR3's own position — `dom.index(cdr3) + len(cdr3) + 10` for α and `+ 9` for
+β — rather than from a motif search. A greedy `[FW]G.G[A-Z]{6,12}` regex overruns FR4 into the
+constant domain, which reintroduces exactly the failure the cut was meant to prevent.
+
+**Both of these look like an ambiguous paper rather than a forgotten step.** When a margin comes
+out low, re-check the offset range and the cut before believing the ambiguity.
+
+## 34. One clone under two names in the same paper
+
+*Observed in Finnigan 2024 (PMID 38459027).* Its Fig. 2a — the only table carrying any CDR3 —
+prints `34BB3` and `46A2D8`. Fig. 2c, Fig. 2d, the Results text and the Source Data workbook all
+print `34AE3` and `46AD8`. Eleven of the thirteen clone names agree; two do not, and nothing in
+the paper acknowledges it.
+
+This matters more than a cosmetic slip, because the clone name is usually the **join key between
+the sequence table and the measurement table**, and the measurement is often what decides whether
+a row exists at all. Here Fig. 2d's per-receptor EC50 against the wild-type peptide is what
+separates a cross-reactive receptor's second row from a non-responder's absent one, and 46AD8 is
+the clone the Results single out as completely cross-reactive. Joining it to the wrong receptor
+would have attached a real positive to the wrong sequence, and nothing downstream would have
+noticed.
+
+**Join on the name, then check the join covered everything.** A set difference in both directions
+costs one line and is the whole detection method: if either side has leftovers, the paper is
+inconsistent and you have found it before it found you.
+
+**Derive the repair, do not hand-write it.** Pair the leftovers by whatever the paper gives you
+that is independent of the name — here the leading digits, elsewhere the target antigen or the
+row order — and assert the resulting map. A hard-coded `{"34BB3": "34AE3"}` is correct today and
+silently wrong the moment a reissued figure renames a third clone; a derived map fails the build
+instead.
+
+**A name that resolves against nothing public is still worth checking against the paper.** These
+are internal lab IDs (§20), so no database adjudicates them. The paper is the only authority, and
+it disagrees with itself.
+
+## 35. A deposit that reports a gene pair it could not separate
+
+*Observed in DiLisio 2026 (PMID 41872174).* Cell Ranger writes an unresolved V call as a compound:
+`TRBV12-2+TRBV13-2`. It is not a gene name and it is not a dual-gene name either — `TRAV38-2/DV8`
+and `TRAV6-7/DV9` are single IMGT genes that happen to carry two labels, and those are written
+verbatim. A `+` is the aligner stating that it could not tell two genes apart.
+
+Writing it into `Vb` is what **C13** exists to prevent, so it never ships. The resolution is in two
+steps:
+
+- **If the same junction pair is observed anywhere with a single-gene call, take that call.** It is
+  the same receptor and the question is which gene it is, not how often it was seen.
+- **Otherwise the row cannot supply a mandatory column** and goes to `clean_<ID>_unresolved.csv`,
+  counted and explained.
+
+**Resolvedness beats support, and this is the trap.** The obvious implementation collapses
+duplicate junction pairs by keeping the best-supported call — which is what you want for the
+ordinary case, where a near-identical duplicated gene like `TRAV10D` against `TRAV10N` splits a
+clonotype's cells 90 to 1. But in all three contested pairs here the *compound* call was the
+better-supported one (28 against 1, 20 against 10, 2 against 1), so sorting by cell count alone
+ships the compound into the clean sheet. Sort on resolvedness first and support second.
+
+Then assert the invariant positively — no shipped gene call contains a `+`. The sort is an
+argument that it cannot happen; the assertion is what catches the next aligner that spells its
+ambiguity some other way.

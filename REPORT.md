@@ -40,11 +40,15 @@ exactly one place.
 | 30 | Both chains published, and never paired | `playbook/judgement.md` | the supplement lists alpha and beta separately |
 | 31 | A deposit publishing the strict IMGT CDR3, not the junction | `playbook/judgement.md` | CDR3s arrive without their leading cysteine |
 | 32 | Reconstructing an analysis: check the paper's own count first | `playbook/judgement.md` | the specificity call has to be recomputed |
+| 33 | Two ways the §28 matcher silently returns the wrong gene | `playbook/judgement.md` | a derived gene call comes out ambiguous |
+| 34 | One clone under two names in the same paper | `playbook/judgement.md` | joining a sequence table to a measurement table |
+| 35 | A deposit reporting a gene pair it could not separate | `playbook/judgement.md` | a gene call arrives as `A+B` |
+| 36 | Figure images from PMC — the `/bin/` path that serves bytes | `playbook/fetching.md` | a table exists only as a figure |
 | — | Decisions that recur | `playbook/judgement.md` | **every extraction** |
 | — | The checks, as runnable assertions (C1–C13) | `playbook/checks.md` | **before writing any output** |
 | — | Verifying recorded sources are real | `audit.py` + `procedures/audit-provenance.md` | after a batch of extractions |
 
-**§1–§10, §13–§23, §25, §26 and §29–§32 are solved or have a stated workaround** — reuse the method. **§11, §12 and
+**§1–§10, §13–§23, §25, §26 and §29–§36 are solved or have a stated workaround** — reuse the method. **§11, §12 and
 §24 are marked IGNORE**: they cannot be resolved without a human, so do not burn time
 re-attempting them.
 
