@@ -175,10 +175,18 @@ flattening a microbial epitope into `Human` states something false; a model trai
 table then cannot separate self from microbial ligands, which is what several of these papers
 exist to study.
 
-Use the source organism as stated — `Human`, `Mouse`, `Synthetic`, `CMV`, `HIV-1`, `Bacterial` —
-and keep deciding it per *source*, never per peptide (§10). The vocabulary is open by necessity,
-so record every value used and flag new ones to the user: fixing it is a schema decision, not a
-per-paper one. Check with `checks.md` **C8**.
+Use the source organism as stated, and keep deciding it per *source*, never per peptide (§10).
+`docs/schema.md` carries the list of values actually in use, which is the one to check against
+before inventing anything. The vocabulary is open by necessity, so **flag a new value to the user
+and wait** — fixing it properly is a schema decision, not a per-paper one, and the approval step is
+the only control there is until then. Check with `checks.md` **C8**.
+
+**`Human coronavirus` and `HCV` were added 2026-10-08**, both from one SARS-CoV-2 vaccine paper
+whose tetramer panel carries seasonal hCoV epitopes and unrelated viral controls alongside the
+spike. They are the case for naming the virus at the paper's own precision: `Human coronavirus`
+stays distinct from `SARS-CoV-2` because the seasonal epitopes are a different peptide source and
+the cross-reactivity the paper measures is between them, not within them. Collapsing the two would
+erase the paper's result.
 
 **`Mouse` is a value, added 2026-10-07 for a murine self or tumour peptide** presented on H2 —
 `docs/schema.md` has the allele spelling. The trap is that a mouse experiment is not a mouse

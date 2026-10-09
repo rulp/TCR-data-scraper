@@ -41,10 +41,22 @@ score all live elsewhere — see below — precisely so this sheet never widens.
   heterodimer is `H2-IAb`, not `IAb`. There is no `*` allele field to append.
 - **`Human` and `HomoSapiens` are the same term.** Either spelling is fine in the species columns;
   no normalization needed.
-- **`pMHC_species` describes where the peptide actually comes from** — `Human`, `Mouse`,
-  `Synthetic`, `CMV`, `HIV-1`, `Bacterial`. Decided **once per peptide *source***, never peptide by peptide.
-  The vocabulary is open by necessity; flag a new value to the user. `playbook/judgement.md` §10
-  and §17 are where this gets mis-applied.
+- **`pMHC_species` describes where the peptide actually comes from.** Decided **once per peptide
+  *source***, never peptide by peptide. The vocabulary is open by necessity, so **flag a new value
+  to the user before emitting it** — that is the only gate on it. `playbook/judgement.md` §10 and
+  §17 are where this gets mis-applied.
+
+  In use so far, every one of them user-approved: `Human` · `Mouse` · `CMV` · `EBV` · `VZV` ·
+  `HBV` · `HCV` · `Human coronavirus` · `SARS-CoV-2` · `Influenza A virus` · `Influenza B virus`.
+  `Synthetic` and `Bacterial` are reserved for a library peptide and a bacterial proteome and have
+  not been needed yet. Two conventions this list encodes, both worth copying:
+
+  - **Name the virus, not the disease or the serotype family**, at the precision the paper itself
+    uses. `SARS-CoV-2` and `Human coronavirus` are deliberately separate values, because the
+    seasonal hCoV epitopes in a cross-reactivity panel are a different peptide source from the
+    pandemic strain's and the papers treat them that way.
+  - **A host-proteome peptide takes the host**, so a somatic mutant of a human gene is `Human` and
+    a murine self or neoantigen is `Mouse` — not the tumour, the cell line or the disease.
 
 ### `Va`, `Ja` and `CDR3a` are mandatory
 
@@ -128,7 +140,12 @@ Both bite on merge. Decide before extending:
   companion provenance CSV is the only thing that makes a pooled table auditable.
 
 A third pressure is now visible: `pMHC_species` has outgrown `Human`/`Synthetic`
-(`playbook/judgement.md` §17). Fixing that vocabulary is a schema decision, not a per-paper one.
+(`playbook/judgement.md` §17). It stands at eleven values over sixteen papers and will keep
+growing, because it is a free-text species label doing the work of a controlled vocabulary —
+nothing stops `Human coronavirus` and `HCoV-OC43` coexisting, or a merge treating them as
+unrelated. Fixing it is a schema decision, not a per-paper one: the exit is a reference list in
+this file that values are checked against, with the user's approval as the only way to extend it.
+Until then the approval step above *is* the control, and it only works if it is actually asked.
 
 - **No modification field on `Antigen`**, so modified epitopes are excluded rather than
   represented (§29, decided 2026-10-08). Unlike the two gaps above this one is a deliberate
